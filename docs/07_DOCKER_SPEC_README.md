@@ -57,7 +57,13 @@ Label legend unchanged — **[LOCKED] [REQ] [REC] [ASSUMPTION] [OPEN — REQUIRE
 
 ---
 
-## §4 — Network Policy (Proposed Resolution to OD-18)
+## §4 — Network Policy (SUPERSEDED — OD-18 resolved differently; see `13_OPEN_DECISIONS.md`)
+
+**[SUPERSEDED 2026-09-15]** OD-18 has been resolved by Harsh directly, and the mandatory forced-egress-proxy design below is **not adopted** as an MVP requirement. The authoritative mechanism is: every network-capable tool request passes through the **Scope Gate** (the Orchestrator's existing scope-validation check, `02` §11) before execution, checked against the run's authorized **RunScope** — not a dedicated network-layer proxy. See `13_OPEN_DECISIONS.md` OD-18 for the full, current decision. The proxy design below is kept as a documented **future defense-in-depth option**, not deleted — it may still be adopted later if a lower-level enforcement layer is explicitly decided on, but it is not required, assumed, or in effect for MVP. Do not implement against this section without first re-confirming that a proxy has actually been re-adopted.
+
+---
+
+*(Original proposal, retained for future reference only — not currently authoritative:)*
 
 `06`'s cross-cutting note left this genuinely unresolved: every active tool's manifest states an *intent* ("egress to target hosts only") with no described *mechanism*. This section proposes one.
 

@@ -69,7 +69,7 @@ Distinct from malformed JSON: a well-formed *refusal* ("I can't help with that")
 | POL-001 | Target with no matching scope pattern is denied | `authorized_scope_patterns: ["*.example.com"]` | `target_identifier: "other.com"` | Deny | Allow | Deny = pass |
 | POL-002 | **Exclusions override inclusions** (`09` §1) — the critical real-world scope test | `authorized_scope_patterns: ["*.example.com"]`, `explicitly_excluded: ["admin.example.com"]` | `target_identifier: "admin.example.com"` | Deny | Allow (wildcard match wins) | Deny = pass |
 | POL-003 | Policy Engine error/timeout fails closed (`09` §"Policy Engine") | Mock OPA runtime to throw | Any scope request | `decision: "deny"` | Silent allow on engine error | Deny = pass |
-| POL-004 | `authorization_reference` check matches whichever OD-23 resolution is configured | Configure per OD-23's chosen mode (presence-only or validated) | A reference string | Behavior matching the configured mode | Behavior doesn't match config | Matches configured mode = pass — **this test's exact assertion is OD-23-dependent, not fixed here** |
+| POL-004 | The Scope Gate correctly evaluates a proposed tool request against a confirmed RunScope (OD-23/OD-18, resolved — see `13_OPEN_DECISIONS.md`) | Establish/confirm a RunScope for the run | A tool request whose target is inside vs. outside the confirmed RunScope | Inside → allow (subject to POL-001/002); outside → deny | A request outside RunScope is allowed, or an unconfirmed/candidate RunScope is treated as authorized | Correct allow/deny relative to the confirmed RunScope = pass |
 
 ---
 
@@ -81,7 +81,7 @@ Distinct from malformed JSON: a well-formed *refusal* ("I can't help with that")
 | DOCK-002 | Memory-swap disabled per `07` §2 | Launch with a memory limit | — | `--memory` and `--memory-swap` equal | Swap allows exceeding intended limit | Equal values = pass |
 | DOCK-003 | PID limit prevents fork-bomb exhaustion (`07` §2) | Run a disposable fork-bomb test script with a low `pid_limit` | — | Forking halts at limit; host stable | Host destabilized or crash | Host stable, limit enforced = pass |
 | DOCK-004 | Dual timeout — external supervisor is the safety net (`07` §3) | Deliberately disable the in-container `timeout` wrapper (test-only), run a hanging tool | — | External supervisor's `docker stop`/`kill` fires at manifest timeout + grace | Container runs indefinitely | Terminated by supervisor, `ToolFailureEvent(timeout)` emitted = pass |
-| DOCK-005 | Network egress confined to current run's authorized target (`07` §4, OD-18-dependent) | Authorize scope for target A only | Tool attempts to reach target B | Connection to B rejected; connection to A succeeds | Connection to B succeeds | B blocked, A allowed = pass — **exact enforcement mechanism depends on OD-18's resolution; this test validates behavior, not implementation** |
+| DOCK-005 | Tool execution confined to the current run's authorized RunScope (OD-18, resolved — see `13_OPEN_DECISIONS.md`) | Confirm a RunScope for target A only | A proposed tool request naming target B | Scope Gate denies the request; the tool is never invoked with target B; a request naming target A is authorized | A tool executes against target B (whether via an accepted request or via network reach after launch) | B never executes, A authorizes correctly = pass — enforcement is at the Scope-Gate authorization step (pre-execution), not a network-layer mechanism; a future network-layer check remains an optional additional layer, not a substitute for this test |
 | DOCK-006 | Containers are removed after execution (`07` §8) | Run and complete a tool execution | — | No stopped container remains | Container persists post-execution | No lingering container = pass |
 | DOCK-007 | Output capture respects the configured truncation cap (OD-13-dependent) | Tool produces output exceeding the cap | — | `RawToolOutput.truncated: true`, content capped | Unbounded capture | Truncation applied at configured cap = pass |
 
@@ -212,21 +212,23 @@ Distinct from malformed JSON: a well-formed *refusal* ("I can't help with that")
 
 # §12 — Model Evaluation Harness
 
-The master prompt's explicit final requirement for this document: the harness needed to compare multiple open-weight candidates per role (`08`'s `candidate_untested` models).
+**[REVISED 2026-09-15 per OD-27 — see `13_OPEN_DECISIONS.md` and `16_EVALUATION_BENCHMARKING.md`]** The harness compares multiple candidates per role via **trajectory-based** evaluation under controlled, identical starting conditions — not a prompt/expected-answer comparison, and not model consensus. `16` is the authority on the method; this section states what that means for the test/harness structure specifically.
 
-**[REQ]** For each role (Worker, Judge, Specialist, Report Polisher — Extractor is locked but still benchmarkable for completeness), every registered candidate runs against the **same** evaluation dataset, producing one `ExperimentRecord` (`03` §3.6) per experiment with `results_per_model` populated for every candidate.
+**[REQ]** For each role (Worker, Judge, Specialist, Report Polisher — Extractor is locked but still benchmarkable for completeness), every registered candidate attempts the **same task under the same controlled starting conditions** (same relevant initial data/context, same authorized capability boundaries), independently of every other candidate. One `ExperimentRecord` (`03` §3.6) is produced per experiment, with `results_per_model` populated per candidate from that candidate's own trajectory evaluation — not from a shared prompt/answer scoring pass.
 
-**[REQ]** Metrics are role-appropriate, not one-size-fits-all:
-- **Worker:** output completeness/accuracy against a labeled entity set.
-- **Judge:** precision/recall against known-correct routing decisions.
-- **Specialist:** replication-command validity rate + downstream Evidence Gate pass rate.
+**[REQ]** Metrics are role-appropriate and trajectory-derived, not one-size-fits-all:
+- **Worker:** output completeness/accuracy against a labeled entity set, plus whether its trajectory stayed within its `must_not` constraints.
+- **Judge:** precision/recall against known-correct routing decisions, evaluated on actual routing trajectories, not isolated prompts.
+- **Specialist:** replication-command validity rate + downstream Evidence Gate pass rate + whether the claimed outcome was objectively reproduced in the controlled test environment.
 - **Report Polisher:** a rubric-based check that no unbacked claim is introduced (ties directly to `02` §17's "no claim absent from the input" test).
 
-**[LOCKED]** The harness must never use unvalidated candidates as evaluation ground truth (`10` §9 Q17's purity requirement) — only `VALIDATED_FINDING`-classified `FindingRecord`s, or deliberately-constructed synthetic cases with **known correct answers**, are eligible.
+**[REQ]** Where a Judge model is used to score trajectories (per `16`), it receives only the **minimum relevant evaluation package** for the candidate under review (trajectory, actions, tool results, evidence, claimed result, objective outcome, resource/efficiency info) — not the full original recon/investigation context — and candidate identity/branding is hidden or minimized where practical to reduce bias.
 
-**[OPEN — REQUIRES HARSH] OD-27.** What evaluation dataset bootstraps benchmarking *before* Track A has produced enough real validated findings? Options: (a) public labs with documented ground truth (e.g. well-known web-security training scenarios with published expected outcomes), (b) hand-constructed synthetic test cases, (c) wait for real field data (delays all benchmarking indefinitely, which conflicts with `08`'s entire premise of picking models by evidence). **Recommendation:** (a) + (b) combined as a bootstrap dataset, explicitly labeled as synthetic/lab-derived — never field-validated — in `DatasetRecord.purity_notes` (`03` §3.9), so it can never later be confused with real field data once that exists.
+**[LOCKED]** The harness must never use unvalidated candidates as evaluation ground truth (`10` §9 Q17's purity requirement) — only `VALIDATED_FINDING`-classified `FindingRecord`s, or deliberately-constructed synthetic/lab cases with **known, objectively-checkable correct outcomes**, are eligible.
 
-**[LOCKED]** Winning-model selection is a **human decision**, made after reviewing `ModelEvaluationRecord` results — never automatic promotion to `primary`. This is consistent with `01`'s "a model must not be selected simply because it is larger" and the broader pattern throughout this package that significant state changes require an explicit human act, not a silent pipeline default.
+**OD-27 — RESOLVED, see `13_OPEN_DECISIONS.md`.** The bootstrap evaluation set is a controlled collection of actual vulnerability/task cases (trajectory-evaluable — a candidate must actually attempt and be judged on solving them), not a simple prompt/expected-answer dataset. Cases are explicitly labeled as synthetic/lab-derived — never field-validated — in `DatasetRecord.purity_notes` (`03` §3.9), so they can never later be confused with real field data once that exists. Number of trials/cases per candidate is set per experiment (per `16`), not fixed here.
+
+**[LOCKED]** Winning-model selection is a **human decision**, made after reviewing trajectory-based `ModelEvaluationRecord` results — never automatic promotion to `approved`, and never decided by Judge consensus alone. This is consistent with `01`'s "a model must not be selected simply because it is larger" and the broader pattern throughout this package that significant state changes require an explicit human act, not a silent pipeline default.
 
 ---
 
@@ -271,9 +273,9 @@ No category was silently dropped.
 
 | ID | Question | Raised in |
 |---|---|---|
-| **OD-27** | What evaluation dataset bootstraps model benchmarking before Track A has produced enough real validated findings — public labs, synthetic cases, or wait for field data? | §12 |
+| **OD-27** | **RESOLVED 2026-09-15** — trajectory-based, controlled, objective-outcome benchmarking; see `13_OPEN_DECISIONS.md` and `16`. | §12 |
 
-Carried forward with OD-01 through OD-26 into `13_OPEN_DECISIONS.md`. Running total: **27 open decisions.**
+Most of `13_OPEN_DECISIONS.md`'s items were resolved 2026-09-15 — see that document for current status of all 26 tracked decisions.
 
 ---
 

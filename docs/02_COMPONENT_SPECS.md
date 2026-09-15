@@ -222,6 +222,8 @@ Registries are the deterministic backbone (`01` §18). This section specifies th
 
 ## 10. Deduplication Engine
 
+**[NOTE — OD-04 resolved 2026-09-15, see `13_OPEN_DECISIONS.md`]** This component's premise — that a live, persisted, cross-run findings index is required — has been reconsidered. Track A runs are intentionally independent; no live deduplication mechanism is required for MVP solely to prevent repeated findings across separate runs. Repeated findings across runs may be retained as independent historical records, with cross-run consolidation handled offline by the research/analysis system. The spec below is retained for reference (and for if/when a dedicated dedup subsystem is later designed) but is **not** an MVP build requirement. OD-10 (index-outage failure policy) is correspondingly moot for MVP. See `13_OPEN_DECISIONS.md` §3 item 1 for the open question of whether `12`'s AC-027/AC-028 gates should be marked N/A for MVP.
+
 | Field | Specification |
 |---|---|
 | **Purpose** | See `01` §19.10. Blocks findings that duplicate a prior one. |
@@ -374,15 +376,17 @@ Registries are the deterministic backbone (`01` §18). This section specifies th
 
 ## 18. Human Verification Interface
 
+**[NOTE — OD-06 resolved 2026-09-15, see `13_OPEN_DECISIONS.md`]** The interface mechanism and the granularity of human involvement are now settled: an **API-oriented validation interface**, not a CLI or dashboard, for MVP. Human validation is the **promotion of a completed candidate to VALIDATED** — asynchronous/batched, not a gate at every internal pipeline step. A cloud LLM may assist by preparing a structured verification package (recommend, score, summarize, flag contradictions) but may never itself perform the promotion. The table below is updated accordingly.
+
 | Field | Specification |
 |---|---|
-| **Purpose** | See `01` §15, §19.11. The mandatory human-control point #2 — SUBMIT / DISCARD / NEEDS_MORE_EVIDENCE. |
-| **Responsibilities** | (1) Present a HumanReviewPackage (the gated, deduplicated candidate plus its full evidence trail) to a human in a reviewable form; (2) Capture an explicit human decision — no default/timeout-based auto-decision is permitted **[LOCKED]**; (3) Route SUBMIT → Report Polisher, DISCARD → research record, NEEDS_MORE_EVIDENCE → back into the pipeline |
-| **Inputs** | HumanReviewPackage |
+| **Purpose** | See `01` §15, §19.11. The mandatory human-control point #2 — SUBMIT / DISCARD / NEEDS_MORE_EVIDENCE. Structurally, this is the sole point in a run where a human decision is required — every step upstream (tools, Extractor, Workers, Judge, Specialist, Evidence Gate, Dedup) proceeds without blocking on a human. |
+| **Responsibilities** | (1) Present a HumanReviewPackage (the gated candidate plus its full evidence trail, optionally accompanied by an LLM-prepared verification package per OD-06) to a human via the validation API; (2) Capture an explicit human decision — no default/timeout-based auto-decision is permitted **[LOCKED]**; (3) Route SUBMIT → Report Polisher, DISCARD → research record, NEEDS_MORE_EVIDENCE → back into the pipeline |
+| **Inputs** | HumanReviewPackage (+ optional LLM-prepared verification package, informational only) |
 | **Outputs** | ValidationOutcome (submit \| discard \| needs_more_evidence, human identity, timestamp) |
-| **Dependencies** | **[OPEN — REQUIRES HARSH] OD-06:** the concrete interface mechanism is not specified anywhere in the master prompt or PRD — CLI tool, local web dashboard, or another mechanism. This is a real implementation gap, not a minor detail: it determines how much work this component actually is. |
+| **Dependencies** | **[LOCKED — OD-06 resolved]** API-oriented interface for MVP; no dashboard required (a future one-click UI may be layered on the same API later). No authentication mechanism is required for MVP (trusted local/authorized user assumption); the system still records the human identity associated with each promotion. Full authentication/access-control is deferred until multi-user or remote operation requires it. |
 | **State** | Stateless with respect to pipeline decisions; may need to persist "pending review" items until a human acts, which is operational queuing state, not decision-influencing memory **[REQ]** |
-| **Interfaces** | `present(package: HumanReviewPackage) -> None` (display side)<br>`capture_decision(package_id: str, decision: ValidationOutcome) -> None` (capture side) — exact transport (HTTP endpoint, CLI prompt, etc.) depends on OD-06 |
+| **Interfaces** | `present(package: HumanReviewPackage) -> None` (API response side)<br>`capture_decision(package_id: str, decision: ValidationOutcome) -> None` (API call side, invoked by the human's action) |
 | **Schemas** | HumanReviewPackage, ValidationOutcome — full fields in `03` |
 | **Security Constraints** | There must be no code path that produces a ValidationOutcome of "submit" without an explicit human action captured through this interface — this is the concrete mechanism behind "automatic submission is impossible" **[LOCKED]** |
 | **Failure Handling** | If the interface is unreachable, the pipeline simply accumulates pending reviews — it does not proceed on their behalf under any circumstance **[LOCKED]** |
@@ -421,11 +425,11 @@ Carried forward to `13_OPEN_DECISIONS.md` alongside OD-01 through OD-04 from `01
 | ID | Question | Raised in |
 |---|---|---|
 | **OD-05** | What observability/logging stack (structured logging framework, metrics backend) is used across all components? | Multiple (implicit) |
-| **OD-06** | What is the concrete interface mechanism for Human Verification — CLI, local dashboard, other? | §18 |
-| **OD-08** | What storage mechanism holds Tool/Worker/Skill/Model Registry manifests? | §1–4 |
-| **OD-09** | Should the Trust-Boundary-A `ScreenResult` be formalized as a `03` schema for audit purposes? | §8 |
-| **OD-10** | On Deduplication index unavailability: fail closed (block all submissions) or fail open with a warning flag? | §10 |
-| **OD-11** | What storage technology backs the Research/Audit Store (distinct from OD-08 and OD-04's storage)? | §19 |
+| **OD-06** | **RESOLVED 2026-09-15** — API-oriented, async/batched, no dashboard for MVP. See `13_OPEN_DECISIONS.md`. | §18 |
+| **OD-08** | **RESOLVED 2026-09-15** — git-tracked JSON/YAML manifests. See `13_OPEN_DECISIONS.md`. | §1–4 |
+| **OD-09** | **RESOLVED 2026-09-15** — yes, formalized in `03`. See `13_OPEN_DECISIONS.md`. | §8 |
+| **OD-10** | **RESOLVED 2026-09-15 (moot)** — no live dedup index exists for MVP. See `13_OPEN_DECISIONS.md`. | §10 |
+| **OD-11** | **RESOLVED 2026-09-15** — local, structured files/lightweight datastore. See `13_OPEN_DECISIONS.md`. | §19 |
 
 None of these are silently resolved here. They are surfaced for `13_OPEN_DECISIONS.md`.
 

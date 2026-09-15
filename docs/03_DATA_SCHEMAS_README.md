@@ -562,7 +562,7 @@ The observation → interpretation → candidate → validated ladder from `01` 
 | `expected_outputs` | object (JSON Schema) | Yes | | Should require a `replication_command`-shaped field, consistent with `02` §16 |
 | `permissions` | array of string | Yes | may be empty | What this Skill's Specialist invocation is allowed to reference (e.g. which tools' outputs) |
 | `version` | string | Yes | | |
-| `provenance` | Provenance | Yes | | Who/what created this manifest version |
+| `provenance` | ManifestProvenance | Yes | | **[LOCKED, updated 2026-09-15]** Now typed as `ManifestProvenance` (§4.1), not the pipeline `Provenance` common type — resolves OD-15's awkward-fit finding. Applies uniformly across `ToolManifest`, `WorkerManifest`, and `SkillManifest`. |
 | `validation_status` | string (enum) | Yes | `draft` \| `active` \| `deprecated` | |
 
 **[REC note on `vulnerability_class`:** a fully closed enum (IDOR/SSRF/AUTH_BYPASS/PRIVILEGE_ESCALATION) is simpler to validate but requires a schema change to add a new class, which conflicts with "skills must be swappable" (`01` §4). Recommend treating this as a registry-validated string (checked against currently-registered Skill entries) rather than a hard enum. This is a genuine design trade-off, not something to silently lock — flagged as **OD-12** below.]
@@ -1148,10 +1148,76 @@ The persisted output of an ExperimentRecord, formalized as the record type the M
 
 | ID | Question | Raised in |
 |---|---|---|
-| **OD-12** | `vulnerability_class` on SkillManifest: closed enum vs. registry-validated open string? Recommendation given (open string), not locked. | §2.15 |
-| **OD-13** | Exact output-size truncation limit for `RawToolOutput.truncated` (ties to OD-02's resource limits, but is specifically a capture-size question, not a container resource question) | §2.7 |
+| **OD-12** | **RESOLVED 2026-09-15** — open, registry-validated string. See `13_OPEN_DECISIONS.md`. | §2.15 |
+| **OD-13** | **RESOLVED 2026-09-15 (deferred)** — no fixed cap for MVP; observe real behavior first. See `13_OPEN_DECISIONS.md`. | §2.7 |
 
 Carried forward with OD-01 through OD-11 into `13_OPEN_DECISIONS.md`.
+
+---
+
+# §4 — Amendments (post-OD-resolution, added 2026-09-15)
+
+These additions record schema-level decisions made in `13_OPEN_DECISIONS.md` (OD-09, OD-15, OD-19, OD-23). They are appended rather than renumbered into §1–§3 above, to avoid disturbing the many existing cross-references to those sections throughout `01`–`12`. Treat them as fully part of the schema set.
+
+## §4.1 ManifestProvenance (common type — resolves OD-15)
+
+**[LOCKED]** A lightweight provenance type for *static manifest authoring*, distinct from the pipeline-run-oriented `Provenance` common type in §1.1 (which requires a `run_id` correlating a record to one live run — an awkward fit for a manifest authored once by a human, outside any run). Applies uniformly to `ToolManifest` (§2.4), `WorkerManifest` (§2.10), and `SkillManifest` (§2.15), replacing `SkillManifest`'s prior stopgap use of the full pipeline `Provenance` type and standardizing what `ToolManifest`/`WorkerManifest` previously expressed only as free-text (`audit_requirements` / `provenance_requirements` respectively — those free-text fields may remain for their original operational-logging purpose; `ManifestProvenance` is additive, covering *authorship*, not audit logging).
+
+| Field | Type | Required | Constraint / Enum | Notes |
+|---|---|---|---|---|
+| `created_by` | string | Yes | human identifier | Who authored/last revised this manifest version |
+| `created_at` | string (ISO 8601) | Yes | | |
+| `source_basis` | string | Yes | free text | e.g. "OWASP methodology reference," "vendor documentation," "internal design" |
+| `version` | string | Yes | | Mirrors the manifest's own `version` field for convenience; the manifest's `version` remains authoritative |
+
+**Valid example:**
+```json
+{"created_by": "harsh", "created_at": "2026-09-15T00:00:00Z", "source_basis": "OWASP API Security Top 10", "version": "1.0.0"}
+```
+
+## §4.2 ToolManifest.expected_output (resolves OD-19)
+
+**[LOCKED]** Formally added as a required field on `ToolManifest` (§2.4), matching what `06`'s concrete instances already carry in practice.
+
+| Field | Type | Required | Constraint / Enum | Notes |
+|---|---|---|---|---|
+| `expected_output` | string | Yes | free text | Describes, in prose, what a successful invocation of this tool is expected to produce — distinct from `output_schema` (the structural shape), this is a human-readable description of the *content* a reviewer should expect to see |
+
+## §4.3 ScreenResult (new schema — resolves OD-09)
+
+**[LOCKED]** Formalizes Trust Boundary A's screening result, previously informal (`02` §8 defined it ad hoc as `{cleared: bool, reason: Optional[str]}`).
+
+| Field | Type | Required | Constraint / Enum | Notes |
+|---|---|---|---|---|
+| `provenance` | Provenance | Yes | `stage = trust_boundary_a` | |
+| `cleared` | boolean | Yes | | `true` = input passed screening; `false` = rejected |
+| `reason` | string | No | required if `cleared = false` | The detection signal that fired — per `09` §7's redaction guidance, this should identify the signal, not necessarily reproduce the full injected payload verbatim |
+
+**Valid example:**
+```json
+{"provenance": {"...": "...", "stage": "trust_boundary_a"}, "cleared": true, "reason": null}
+```
+
+**Invalid example (reason: `cleared = false` but no `reason` given):**
+```json
+{"cleared": false}
+```
+
+## §4.4 RunScope — shape note (resolves OD-23; full schema restructuring deferred to implementation)
+
+**[LOCKED — shape recorded; not yet integrated into §2.1/§2.2's field tables]** OD-18/OD-23 introduced a richer authorized-scope concept than `ScopeRequest`/`ScopeDecision` (§2.1–2.2) currently hold. `ScopeRequest.target_identifier` + `authorization_reference` are no longer the full picture — the authorized scope for a run is a structured **RunScope**, established/confirmed by a human before execution and then evaluated by the Scope Gate against every proposed tool request (not just once, at run entry). A parser/model may extract and normalize scope information into a *candidate* RunScope, but never itself grants authorization.
+
+Recorded fields (as applicable per engagement — none of these are hardcoded values, they are the shape a real RunScope instance populates):
+- `authorization_reference`
+- allowed domains
+- allowed subdomains
+- allowed IPs/CIDRs
+- allowed ports/protocols
+- exclusions
+- prohibited operation classes
+- relevant run metadata
+
+**Not decided here:** the exact field-level schema restructuring of §2.1 `ScopeRequest` / §2.2 `ScopeDecision` to formally carry this shape. That is real schema design work explicitly left to the implementation phase (per `13_OPEN_DECISIONS.md` OD-23's own text). Do not treat this note as authorizing a silent rewrite of §2.1/§2.2 — it records the *shape* now so implementation doesn't have to reverse-engineer it from `13`.
 
 ---
 
