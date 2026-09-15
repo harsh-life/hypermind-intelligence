@@ -426,10 +426,10 @@ Carried forward to `13_OPEN_DECISIONS.md` alongside OD-01 through OD-04 from `01
 |---|---|---|
 | **OD-05** | What observability/logging stack (structured logging framework, metrics backend) is used across all components? | Multiple (implicit) |
 | **OD-06** | **RESOLVED 2026-09-15** — API-oriented, async/batched, no dashboard for MVP. See `13_OPEN_DECISIONS.md`. | §18 |
-| **OD-08** | **RESOLVED 2026-09-15** — git-tracked JSON/YAML manifests. See `13_OPEN_DECISIONS.md`. | §1–4 |
+| **OD-08** | **ARCHITECTURE RESOLVED 2026-09-15** — git-tracked JSON/YAML is the canonical form; concrete tooling/layout DEFERRED to implementation. See `13_OPEN_DECISIONS.md`. | §1–4 |
 | **OD-09** | **RESOLVED 2026-09-15** — yes, formalized in `03`. See `13_OPEN_DECISIONS.md`. | §8 |
 | **OD-10** | **RESOLVED 2026-09-15 (moot)** — no live dedup index exists for MVP. See `13_OPEN_DECISIONS.md`. | §10 |
-| **OD-11** | **RESOLVED 2026-09-15** — local, structured files/lightweight datastore. See `13_OPEN_DECISIONS.md`. | §19 |
+| **OD-11** | **ARCHITECTURE RESOLVED 2026-09-15** — local, canonical-structured-data; exact technology (files vs. datastore) DEFERRED to implementation. See `13_OPEN_DECISIONS.md`. | §19 |
 
 None of these are silently resolved here. They are surfaced for `13_OPEN_DECISIONS.md`.
 

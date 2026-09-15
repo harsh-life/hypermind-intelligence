@@ -140,7 +140,7 @@ Label legend unchanged — **[LOCKED] [REQ] [REC] [ASSUMPTION] [OPEN — REQUIRE
 
 ## 5. Nuclei
 
-**[LOCKED — OD-17 resolved 2026-09-15, see `13_OPEN_DECISIONS.md`]** OD-17 is resolved as a **capability-oriented** model, not a pre-built static allowlist: the model may reason about what it needs, request a Nuclei capability dynamically, and that request passes through the Scope Gate/policy check before execution — the same MODEL DECIDES → POLICY/SCOPE AUTHORIZES → TOOL EXECUTES boundary every other tool follows. A specific template/capability restriction is defined only if a later implementation/security decision actually requires one, based on the real capability being implemented — not invented speculatively here. The entry below's `[REQ, blocking]` failure-handling note (requiring a curated allowlist before any activation) is **superseded** by this resolution; Nuclei is governed by the same authorization model as the rest of the registry, not held to a separate static-list precondition.
+**[PARTIALLY LOCKED — OD-17, see `13_OPEN_DECISIONS.md`]** The *authorization model* is LOCKED: the model may reason about what it needs, request a Nuclei capability dynamically, and that request passes through the Scope Gate/policy check before execution — the same MODEL DECIDES → POLICY/SCOPE AUTHORIZES → TOOL EXECUTES boundary every other tool follows, not a pre-built static allowlist. The entry below's `[REQ, blocking]` failure-handling note (requiring a curated allowlist as a *precondition*) is superseded to that extent — Nuclei is authorized the same way as any other tool, not gated behind a separate static-list precondition. **The concrete template/capability policy itself remains DEFERRED, not resolved:** which specific templates/capabilities are actually permitted is real security-judgment work left to the Nuclei activation/implementation phase, and this entry does not itself grant Nuclei `active` status.
 
 *(Original framing, retained for context only — no longer the operative constraint:)* The master prompt lists Nuclei as included "where explicitly supported" (`01` §11) — phrasing that implies a restriction exists but does not specify what it is. Nuclei's full public template library includes many templates far more intrusive than passive detection (some templates actively attempt exploitation to confirm a finding).
 
@@ -259,7 +259,7 @@ Label legend unchanged — **[LOCKED] [REQ] [REC] [ASSUMPTION] [OPEN — REQUIRE
 
 | ID | Question | Raised in |
 |---|---|---|
-| **OD-17** | **RESOLVED 2026-09-15** — see `13_OPEN_DECISIONS.md`. Capability-oriented model; no static allowlist required. | §5 (Nuclei) |
+| **OD-17** | **PARTIALLY RESOLVED 2026-09-15** — see `13_OPEN_DECISIONS.md`. Authorization model (capability-request-through-Scope-Gate) is LOCKED; the concrete template/capability policy is DEFERRED to Nuclei's activation/implementation phase. | §5 (Nuclei) |
 | **OD-18** | **RESOLVED 2026-09-15** — see `13_OPEN_DECISIONS.md`. Scope Gate is the enforcement checkpoint; no proxy mandated. | Cross-cutting note above |
 | **OD-19** | `03`'s `ToolManifest` schema (§2.4) omitted a distinct `expected_output` field that master-prompt STEP 06 explicitly lists separately from `output_schema`. This document added `expected_output` (free-text description) to every entry above to satisfy the master prompt's actual field list, but `03` itself doesn't yet define it as a schema field — should `03` be amended to add it formally? | Discovered while writing every entry in this document |
 

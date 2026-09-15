@@ -91,7 +91,11 @@ On 2026-09-15, Harsh resolved OD-18, OD-06, OD-27, OD-17, OD-04, OD-08, and OD-1
 ---
 
 ## OD-17 — Nuclei / Tool Authorization
-**STATUS: LOCKED**
+**STATUS: PARTIALLY LOCKED — the authorization *model* is LOCKED; the concrete Nuclei template/capability policy is DEFERRED.**
+
+**What is LOCKED:** the capability-oriented model below — the model may request a capability dynamically, and the Scope Gate/policy check authorizes or denies it before execution. This governs Nuclei exactly as it governs every other tool, and is not conditional on anything further.
+
+**What is DEFERRED, not resolved:** which specific Nuclei templates/capabilities are actually permitted, and any concrete restriction on them, is **not decided by this entry**. That is real security-judgment work explicitly deferred to the Nuclei activation/implementation phase — this decision does not pre-authorize the full upstream template library, and does not itself grant Nuclei `active` status. Do not read the LOCKED authorization model as having settled what Nuclei is actually allowed to run.
 
 **Prior proposal (superseded):** the framing in `13` (prior revision) and `06` §5 that OD-17 requires a Harsh-curated static allowlist of Nuclei template tags before any activation, implying a fixed, small, hardcoded template list. That framing is corrected — it should not be read as license to cripple model agency down to a tiny predetermined action sequence.
 
@@ -110,7 +114,11 @@ On 2026-09-15, Harsh resolved OD-18, OD-06, OD-27, OD-17, OD-04, OD-08, and OD-1
 ---
 
 ## OD-04 / OD-08 / OD-11 — Storage
-**STATUS: OD-08 LOCKED · OD-11 LOCKED · OD-04 LOCKED (see narrow residual note under §3)**
+**STATUS: Architecture and boundaries LOCKED for all three · concrete storage technology DEFERRED for OD-08 and OD-11 · OD-04 LOCKED (no live engine required for MVP; see narrow residual note under §3)**
+
+**What is LOCKED (architecture/boundaries):** run independence; structured machine-readable data as canonical source of truth with human-friendly formats as exports only; no automatic cross-run query from the live pipeline; clear separation between registry storage, per-run evidence, dedup state (if any), and research/audit history; separation from Track B/Mem0; local-to-the-execution-system for MVP.
+
+**What is DEFERRED (concrete technology):** for OD-08, that manifests are git-tracked JSON/YAML is the locked *canonical form*; anything beyond that (tooling, validation scripts, directory layout specifics) is implementation-phase work. For OD-11, the exact local storage mechanism — plain structured files vs. a lightweight local datastore, and which one — is explicitly left open, to be chosen "where actual querying/indexing requirements justify it" at implementation time, not pre-selected here.
 
 **Prior proposal (superseded):** `13`'s prior revision treated OD-04 as "pick a storage technology for a live deduplication findings index." That framing is superseded — the decision below reconsiders whether a live dedup engine is needed at all for MVP, rather than picking storage for one.
 
@@ -124,10 +132,10 @@ On 2026-09-15, Harsh resolved OD-18, OD-06, OD-27, OD-17, OD-04, OD-08, and OD-1
 - "Run independence" does **not** mean "no persistence." Persistence is required; what's avoided is automatic cross-run behavioral influence in the live pipeline.
 
 **OD-08 (registry manifest storage) — specifically:**
-Registry manifests (Tool/Worker/Skill/Model) are stored as version-controlled JSON/YAML files directly in the Git repository for MVP — human-reviewable, diffable, versioned, reproducible. No separate database required for MVP.
+**LOCKED (canonical form):** registry manifests (Tool/Worker/Skill/Model) are version-controlled JSON/YAML files directly in the Git repository for MVP — human-reviewable, diffable, versioned, reproducible. No separate database required for MVP. **DEFERRED (implementation detail):** anything beyond that canonical form — validation tooling, exact directory layout, load-time mechanics — is left to the registry implementation phase, not decided here.
 
 **OD-11 (Research/Audit Store) — specifically:**
-Remains local to the execution system for MVP. Runs persisted as independent, auditable artifact sets. Structured machine-readable data is canonical; human-friendly formats are exports. The live pipeline does not automatically query historical runs as implicit cross-run memory. Concrete local implementation may use simple structured files and/or a lightweight local datastore where actual querying/indexing needs justify it — no infrastructure introduced ahead of the workload requiring it. (This also resolves **OD-24**: no additional application-level encryption-at-rest or long-term retention policy is required for the current MVP; storage inherits normal OS/filesystem security, and retention/cleanup remains an operational, not an application-enforced, concern.)
+**LOCKED (architecture):** remains local to the execution system for MVP. Runs persisted as independent, auditable artifact sets. Structured machine-readable data is canonical; human-friendly formats are exports. The live pipeline does not automatically query historical runs as implicit cross-run memory. **DEFERRED (concrete technology):** whether the local implementation uses simple structured files, a lightweight local datastore, or both, is intentionally left open — chosen only where actual querying/indexing needs justify it, at implementation time, not pre-selected here. (This also resolves **OD-24**: no additional application-level encryption-at-rest or long-term retention policy is required for the current MVP; storage inherits normal OS/filesystem security, and retention/cleanup remains an operational, not an application-enforced, concern — that part is fully LOCKED, not deferred.)
 
 **OD-04 (Deduplication) — specifically:**
 The prior assumption that a live cross-run deduplication index is required is reconsidered. Each Track A run is intentionally independent — findings, evidence, model outputs, and reports stay associated with their originating run and are not merged with other runs during live execution. Candidate models in competitive evaluation (OD-27) also operate independently on the same task and do not share findings/state/trajectories with one another; the Judge evaluates each candidate independently.
@@ -204,15 +212,15 @@ This resolves **OD-10** as moot for MVP: since no live dedup index exists, no de
 
 These are narrow, downstream questions raised *by* the resolved decisions above, applying to specific other documents. They are not re-opening anything — they are asking how far the recorded decision should reach into documents this pass did not touch.
 
-1. **OD-04 / Dedup acceptance gates.** `12`'s Group I (AC-027 "a candidate matching a prior finding is always flagged duplicate," AC-028 "no live code path can edit or delete a findings-index entry") and `11` §5.6's DEDUP-* tests assume a live Deduplication Engine exists. Since OD-04 now says no live dedup engine is required for MVP, should AC-027/AC-028 and DEDUP-001–004 be marked **N/A for MVP** (deferred to whenever/if a dedup subsystem is later built), or kept as-is with an explicit "not currently gating" annotation? Not resolved here — this is a change to the acceptance-gate list itself, which felt beyond "recording a decision."
+1. **OD-04 / Dedup acceptance gates — RESOLVED in the 2026-09-15 cleanup pass.** `12`'s Group I (AC-027, AC-028) and `11` §5.6's DEDUP-001–004 are now explicitly marked **N/A / DEFERRED FOR MVP** in both documents, preserved in place as future tests/gates for if and when a live cross-run deduplication subsystem is actually introduced. Not deleted, not silently dropped.
 
 2. **OD-01 / Promptfoo's existing Tool Registry entry.** `06`'s Promptfoo entry (§8) was written for a different use case — an offensive/scanning tool against third-party AI targets, gated `provisional_pending_OD-01` specifically over the OpenAI-acquisition conflict-of-interest concern. The new decision repositions Promptfoo into the *model-evaluation toolchain* instead. Does this mean `06`'s Tool-Registry entry (for target-scanning use) stays exactly as it was — still inactive, still pending — because the new decision doesn't speak to that use case at all? Recorded as unaffected/separate pending your confirmation.
 
-3. **Fine-tuning gate language in `01` §3 and `16`.** `01` §3 (marked `[LOCKED]`) states fine-tuning requires Plan A demonstrated insufficient **AND** 2,000+ validated proprietary examples. The newly recorded decision on fine-tuning (Q31: "no automatic fine-tuning trigger or mandatory threshold... the user decides") is a real loosening of that specific numeric gate. This touches text marked `[LOCKED]` in the canonical architecture document, which this pass did not have explicit instruction to amend — flagging rather than editing `01` §3 unilaterally.
+3. **Fine-tuning gate language in `01` §3 — RESOLVED in the 2026-09-15 cleanup pass.** `01` §3's numeric "2,000+ validated proprietary examples" gate has been removed and replaced with text reflecting the user-controlled sufficiency judgment already recorded under `08`'s fine-tuning note above. No replacement numeric threshold was invented. See Cross-Document Impact Table.
 
-4. **`03` §2.1/§2.2 RunScope shape.** OD-23's RunScope field list is richer than the current `ScopeRequest`/`ScopeDecision` schemas (which hold only `target_identifier` + `authorization_reference`). A documented amendment noting the intended richer shape has been added to `03` (see Cross-Document Impact Table), but the schema tables themselves have not been restructured — that's real schema design work, left for the implementation phase per OD-23's own text ("implementation-level networking details... left to the relevant implementation phase").
+4. **`03` §2.1/§2.2 RunScope shape — still open, unchanged from the prior revision.** OD-23's RunScope field list is richer than the current `ScopeRequest`/`ScopeDecision` schemas (which hold only `target_identifier` + `authorization_reference`). A documented amendment noting the intended richer shape has been added to `03` (see Cross-Document Impact Table), but the schema tables themselves have not been restructured — that's real schema design work, left for the implementation phase per OD-23's own text.
 
-None of these four require an answer before further documentation recording continues — they matter once the affected document is actually touched for implementation.
+Items 1 and 3 are now closed. Items 2 and 4 remain open and do not require an answer before further documentation recording continues — they matter once the affected document is actually touched for implementation.
 
 ---
 
@@ -223,19 +231,19 @@ None of these four require an answer before further documentation recording cont
 | OD-01 | Promptfoo status | **LOCKED** | Repositioned to model-eval toolchain; see §3 item 2 |
 | OD-02 | Retry/timeout/resource values | **LOCKED (deferred/configurable)** | No numbers ratified; determined from real execution |
 | OD-03 | Host hardware profile | **LOCKED** | Portable; 4GB dev / 16GB execution; resource-aware |
-| OD-04 | Dedup index vs. Mem0 boundary | **LOCKED** | No live dedup engine for MVP; see §3 item 1 |
+| OD-04 | Dedup index vs. Mem0 boundary | **LOCKED** | No live dedup engine for MVP; `11`/`12` dedup tests/gates marked N/A/DEFERRED FOR MVP |
 | OD-05 | Observability/logging stack | OPEN | Unaddressed this round |
 | OD-06 | Human Verification interface | **LOCKED** | API-oriented, async/batched, no dashboard for MVP |
-| OD-08 | Registry manifest storage | **LOCKED** | Git-tracked JSON/YAML |
+| OD-08 | Registry manifest storage | **Architecture LOCKED** | Git-tracked JSON/YAML is the canonical form; tooling/layout DEFERRED |
 | OD-09 | ScreenResult schema | **LOCKED** | Formalized in `03` |
 | OD-10 | Dedup outage: fail closed/open | **LOCKED (moot)** | No live dedup index exists for MVP |
-| OD-11 | Research Store storage tech | **LOCKED** | Local, structured files/lightweight datastore |
+| OD-11 | Research Store storage tech | **Architecture LOCKED** | Local, canonical-structured-data; exact tech (files vs. datastore) DEFERRED |
 | OD-12 | vulnerability_class enum shape | **LOCKED** | Open, registry-validated string |
 | OD-13 | Output truncation cap | **LOCKED (deferred)** | No fixed cap for MVP |
 | OD-14 | AI-security Skill gap | **LOCKED** | Registered, inactive, unroutable until Skill+scope exist |
 | OD-15 | SkillManifest.provenance fit | **LOCKED** | Shared `ManifestProvenance` across all 3 manifest types |
 | OD-16 | IDOR/PrivEsc boundary | **LOCKED (deferred)** | No hardcoded rule yet |
-| OD-17 | Nuclei template allowlist | **LOCKED** | Capability-request-through-Scope-Gate model, not a static list |
+| OD-17 | Nuclei template allowlist | **Model LOCKED · concrete policy DEFERRED** | Capability-request-through-Scope-Gate model is settled; which templates/capabilities are actually permitted is not |
 | OD-18 | Network egress scoping mechanism | **LOCKED** | Scope Gate is the checkpoint; no proxy mandated |
 | OD-19 | ToolManifest.expected_output gap | **LOCKED** | Formally added to `03` |
 | OD-20 | Image signature verification | **LOCKED (deferred)** | Digest pinning only for MVP |
@@ -247,7 +255,9 @@ None of these four require an answer before further documentation recording cont
 | OD-26 | Dataset contamination pruning policy | **LOCKED** | Versioned artifacts; mark/exclude or reissue |
 | OD-27 | Benchmarking bootstrap dataset | **LOCKED** | Trajectory-based, controlled, objective-outcome evaluation |
 
-**26 of 26 previously-tracked decisions now have a recorded status; 25 LOCKED, 1 (OD-05) still open.** OD-07 remains reserved into OD-04, never a standalone item.
+**26 of 26 previously-tracked decisions now have a recorded status; OD-05 remains open, the other 25 have an architectural resolution recorded.** Several of those 25 (OD-04, OD-08, OD-11, OD-17) are resolved at the architecture level while explicitly naming a narrower implementation-level detail as still DEFERRED — see each entry above for exactly what remains open. OD-07 remains reserved into OD-04, never a standalone item.
+
+**On reading this table:** "LOCKED" here means the architectural question is settled, not that every implementation detail is decided. Where a decision names a DEFERRED sub-item, that sub-item is intentionally left for the relevant implementation phase — it is not an oversight and not still under debate.
 
 ---
 
@@ -266,8 +276,9 @@ Where a canonical document's existing text would otherwise contradict a decision
 | `08_MODEL_REGISTRY.md` | Currently Selected Implementations / Judge row | Judge marked UNDECIDED, diversity recommended | **Annotated** — Judge = interchangeable Lego, initial pick a heavyweight cloud model; diversity not mandated; Report Polisher treated as Judge-like |
 | `11_TEST_PLAN_README.md` | §12 Model Evaluation Harness | Described as N-prompt schema-validity benchmarking | **Flagged only** — needs a trajectory-based rewrite; not rewritten in this pass |
 | `16_EVALUATION_BENCHMARKING.md` | Whole document | Prompt/expected-answer-shaped criteria table | **Flagged only** — needs a trajectory-based rewrite; not rewritten in this pass |
-| `12_ACCEPTANCE_CRITERIA_README.md` | Group I (AC-027/028) | Assumes a live Dedup Engine exists | **Flagged only** — see §3 item 1 |
-| `01_ARCHITECTURE.md` | §3 Non-Goals (fine-tuning gate) | `[LOCKED]` 2,000+ example numeric gate | **Flagged only** — see §3 item 3 |
+| `12_ACCEPTANCE_CRITERIA_README.md` | Group I (AC-027/028) | Assumed a live Dedup Engine exists | **Annotated** — marked N/A/DEFERRED FOR MVP, preserved for future use |
+| `11_TEST_PLAN_README.md` | §5.6 (DEDUP-001–004) | Assumed a live Dedup Engine exists | **Annotated** — marked N/A/DEFERRED FOR MVP, preserved for future use |
+| `01_ARCHITECTURE.md` | §3 Non-Goals (fine-tuning gate) | `[LOCKED]` 2,000+ example numeric gate contradicted the user-controlled fine-tuning decision | **Fixed** — numeric threshold removed, no replacement number invented; gate now reads as user-controlled sufficiency judgment |
 | `01_ARCHITECTURE.md` | §5, §9 (pipeline / Orchestrator) | — | **No contradiction found** — already compatible with OD-18/OD-06 as written |
 | `09_SECURITY_POLICIES_README.md` | §5 Human-Validation Controls | — | **No contradiction found** — already compatible with OD-06 (validation gates submission, not every step) |
 | `10_RESEARCH_DATA_PIPELINE.md` | §1 Firewall | — | **No contradiction found** — fully compatible with, and reinforced by, the OD-04/08/11 storage philosophy |

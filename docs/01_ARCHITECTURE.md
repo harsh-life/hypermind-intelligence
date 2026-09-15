@@ -62,7 +62,7 @@ Revenue (bounty payouts) is real but secondary. The primary deliverable is a **p
 **[LOCKED]**
 
 - No auto-submission of any report. A human submits every finding, every time.
-- No fine-tuning until Plan A (base model + skill + few-shot) demonstrably fails AND 2,000+ validated proprietary examples exist. See EVALUATION_BENCHMARKING.md.
+- No fine-tuning until Plan A (base model + skill + few-shot) is demonstrated insufficient. Fine-tuning is user-controlled: there is no automatic trigger or fixed numeric example-count threshold — the user decides when accumulated validated data is sufficient to begin fine-tuning and when a fine-tuned model is ready to replace a candidate. See MODEL_REGISTRY.md and EVALUATION_BENCHMARKING.md. **[Updated 2026-09-15 — resolves a contradiction with the prior fixed "2,000+ validated proprietary examples" gate; see 13_OPEN_DECISIONS.md.]**
 - No live target access for new contributors until the full ramp protocol is cleared.
 - No consumer-facing functionality — Track A is headless infrastructure only.
 - No creative reasoning tasks (business logic, race conditions, chaining) — outside scope of narrow specialist models at this stage.

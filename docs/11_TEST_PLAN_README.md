@@ -138,6 +138,8 @@ Distinct from malformed JSON: a well-formed *refusal* ("I can't help with that")
 
 ## 5.6 Deduplication (DEDUP) — covers "duplicate findings"
 
+**[N/A / DEFERRED FOR MVP — see `13_OPEN_DECISIONS.md` OD-04, resolved 2026-09-15]** OD-04 determined that no live, cross-run Deduplication Engine is required for MVP — each run is independent, and cross-run consolidation is handled offline. The four tests below therefore do not gate the MVP and are not currently run. They are preserved as-is, unmodified, so they are ready to use without rewriting if a live cross-run deduplication subsystem is introduced later.
+
 | ID | Purpose | Setup | Input | Expected Output | Failure Condition | Pass/Fail |
 |---|---|---|---|---|---|---|
 | DEDUP-001 | Candidate identical to a prior validated finding is flagged | Pre-seed the index with a known finding | Matching candidate | `result: "duplicate"`, `matched_finding_id` populated | `"unique"` returned | Duplicate correctly flagged = pass |
