@@ -38,6 +38,26 @@ class ToolManifest(HypermindModel):
       authorship-provenance field at all, only the unrelated
       `audit_requirements` (what to log at *runtime*, kept below,
       unchanged).
+    - `validation_status` is added (Context 2, registries scope). Neither
+      docs/03 §2.4 nor docs/06's illustrative JSON instances literally
+      define this as a manifest field, yet docs/06 §8's prose ("marked
+      `validation_status: provisional_pending_OD-01`") and
+      docs/12_ACCEPTANCE_CRITERIA_README.md AC-007 ("A `validation_status`
+      other than `active` ... blocks execution the same as full
+      non-registration") both require the Tool Registry to track and gate
+      on exactly this field. This is the same class of gap OD-19 already
+      resolved for `expected_output` — an instance/prose-level requirement
+      docs/03's schema never formalised — so the same resolution applies:
+      add the field to the canonical schema rather than inventing a
+      second, parallel "registry state" representation of it. Kept as an
+      open `str` (default `"active"`), mirroring `category`'s existing
+      open-string precedent, since future tools may need arbitrary
+      provisional-pending states (as Promptfoo does for OD-01) that a
+      small closed enum can't anticipate. `SkillManifest.validation_status`
+      (docs/03 §2.15) remains its own, separately-defined closed enum —
+      not reused here, since its three values (draft/active/deprecated)
+      don't cover the Promptfoo-style provisional state this field must
+      represent.
 
     [FINAL per architecture-owner decision — do not reopen.]
     `risk_classification` stays the closed `low | medium | high` enum
@@ -64,6 +84,7 @@ class ToolManifest(HypermindModel):
     failure_handling: str
     audit_requirements: str
     provenance: ManifestProvenance
+    validation_status: str = "active"
 
     @model_validator(mode="after")
     def _positive_timeout(self) -> "ToolManifest":
