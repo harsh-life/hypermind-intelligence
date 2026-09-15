@@ -95,7 +95,7 @@ Build in dependency order, not document order. Foundations first, because everyt
 1. **Schemas (`03`)** — everything validates against these; build and test them first, including the `trust_classification` enforcement.
 2. **Registries + manifest loading (`02` §1-4, `04`/`05`/`06`/`08`)** — the deterministic backbone.
 3. **Policy Engine + Scope Gate (`09` §1, `02` §6-7)** — nothing runs against a target without this.
-4. **Docker Tool Execution Engine + the egress proxy (`07`, OD-18)** — ⚠ **the egress proxy is a real build, not assembly; it gates 7 of 8 tools** (`14` RISK-1). Do this early; it's on the critical path.
+4. **Docker Tool Execution Engine + Scope Gate request-level authorization (`07`, `02` §11, OD-18 — resolved, see `13`)** — every network-capable tool request a model proposes must be authorized by the Scope Gate against the current run's confirmed RunScope before it executes (MODEL PROPOSES → SCOPE DECIDES → TOOL EXECUTES). This is **not** a network-layer proxy — none is mandated for MVP; a lower-level network enforcement mechanism remains a possible future addition, not a current requirement. Build the Scope Gate check early regardless: no tool may execute without it, so it's still on the critical path.
 5. **Extractor (`02` §13)** — first component past TB-B; the TB-B-holds test (EXT-002) must pass before trusting anything downstream.
 6. **Orchestrator + check chain (`02` §11)** — the control spine.
 7. **Workers → Judge → Specialist (`02` §14-16)** — the analysis core.
@@ -148,7 +148,7 @@ Eight tools (`06`): Subfinder, Httpx, Katana, Ffuf (recon); Nuclei (vuln scan �
 
 ## 11. Docker Requirements
 
-Full spec in `07`. Non-negotiables: pinned digests (never `:latest`), fail-closed on digest mismatch, read-only rootfs, tmpfs scratch (no host bind-mounts), enforced CPU/memory/PID limits, dual timeout (external supervisor + in-container), `--rm` cleanup, and the per-run forced egress proxy (OD-18). Synchronous output capture = TB-B (`07` §7).
+Full spec in `07`. Non-negotiables: pinned digests (never `:latest`), fail-closed on digest mismatch, read-only rootfs, tmpfs scratch (no host bind-mounts), enforced CPU/memory/PID limits, dual timeout (external supervisor + in-container), `--rm` cleanup, and Scope Gate authorization of every network-capable tool request against the current RunScope before execution (OD-18 — resolved; a network-layer enforcement mechanism, such as a proxy, is not required for MVP and remains an optional future addition, not a non-negotiable). Synchronous output capture = TB-B (`07` §7).
 
 ---
 
@@ -217,7 +217,7 @@ Track A's Phase 2A MVP is done — and only then may it run against a real targe
 3. The three FINDING corrections from `14` are made.
 4. **RDI-001 / AC-032 pass** — the research firewall is a structural impossibility, verified, not a convention.
 5. **AC-029 / AC-031 pass** — no `submit` without an identified human; no submission capability exists in the codebase.
-6. The egress proxy (OD-18) is built and DOCK-005 passes for every active tool.
+6. **DOCK-005 passes for every active tool** — every proposed tool request is authorized by the Scope Gate against the current run's confirmed RunScope before execution, and a request outside RunScope is never executed (OD-18 — resolved; no network-layer proxy build is required for this to be considered done).
 7. A golden-path E2E run (E2E-001) succeeds against a controlled target with a planted vulnerability, **and** a clean-target run (E2E-002) produces no fabricated finding.
 8. A human with genuine security expertise is in the validation loop (`14` RISK-3 — this is a staffing precondition, not a code one, but it is part of "done" because without it the entire evidence chain is hollow).
 
@@ -229,9 +229,9 @@ Phase 2A does not exit on a date. It exits when this list is fully satisfied —
 
 If you internalize nothing else from the companion documents, internalize these:
 
-1. **OD-18 is on the critical path** — the egress proxy gates most of the pipeline and is a real build. Start it early.
+1. **Scope Gate authorization is on the critical path** — no tool may execute without it, so build it early. OD-18 is resolved: the Scope Gate (not a network-layer proxy) is the required authorization checkpoint for every network-capable tool request, checked against the current run's confirmed RunScope.
 2. **The research firewall must be structural, not a rule** — build it so live code *cannot* read the store, and prove it with RDI-001.
-3. **Two things need building, not assembling** — the egress proxy and the human-review interface. Everything else is largely assembly; these two aren't.
+3. **One thing needs genuine custom building, not assembling — the human-review interface** (OD-06's API-oriented interface). The previously-listed second item here, a forced egress proxy, is not required: OD-18 resolved to Scope-Gate-based request authorization, which extends the Orchestrator's existing check chain rather than requiring a new network-layer component. Everything else is largely assembly.
 4. **The whole evidence chain rests on human security expertise** — the best pipeline in the world produces validated-looking garbage if the human at the SUBMIT gate can't tell a real finding from a plausible false positive.
 
 ---

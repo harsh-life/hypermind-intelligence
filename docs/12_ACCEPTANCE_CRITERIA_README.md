@@ -96,10 +96,12 @@ Three of the master prompt's own named examples — "unregistered tools cannot e
 
 *(Master prompt's explicit example: "duplicates are blocked")*
 
+**[N/A / DEFERRED FOR MVP — see `13_OPEN_DECISIONS.md` OD-04, resolved 2026-09-15]** No live cross-run Deduplication Engine is required for MVP; these two gates do not currently apply and are not part of the MVP release-gate checklist. They are preserved, unmodified, for if and when a live cross-run deduplication subsystem is introduced later.
+
 | Gate | Statement | Verification | Blocking |
 |---|---|---|---|
-| **AC-027** | A candidate matching a prior finding is always flagged `duplicate` | DEDUP-001 | Yes |
-| **AC-028** | No live code path can edit or delete a findings-index entry | DEDUP-004 | Yes |
+| **AC-027** | A candidate matching a prior finding is always flagged `duplicate` | DEDUP-001 | **N/A — DEFERRED FOR MVP** |
+| **AC-028** | No live code path can edit or delete a findings-index entry | DEDUP-004 | **N/A — DEFERRED FOR MVP** |
 
 # Group J — Human Control
 
@@ -153,13 +155,13 @@ Three of the master prompt's own named examples — "unregistered tools cannot e
 | Research records preserve provenance | AC-033 *(same requirement as "provenance is preserved" — not duplicated as a separate gate)* |
 | Validated and unvalidated records remain distinguishable | AC-034 |
 
-All 15 covered; 39 gates total, since the master prompt's examples were explicitly illustrative ("Examples:"), not an exhaustive list, and this package locked considerably more than 15 requirements across `01`–`11`.
+All 15 covered; 39 gates total (37 currently apply to MVP; AC-027 and AC-028 are marked N/A/DEFERRED FOR MVP per `13_OPEN_DECISIONS.md` OD-04 — see Group I), since the master prompt's examples were explicitly illustrative ("Examples:"), not an exhaustive list, and this package locked considerably more than 15 requirements across `01`–`11`.
 
 ---
 
 ## The MVP Release Gate
 
-**[LOCKED]** Phase 2A's first live run against a real target may proceed **only when every gate in Groups A through L passes**, including REG-TOOL-001, REG-WORKER-001, and REG-SKILL-001 (now defined in `11` §1b). There is no partial-release state — a pipeline that finds real vulnerabilities but fails AC-032 (the firewall) or AC-029 (human validation) has not met the bar Track A set for itself, regardless of how good its findings look.
+**[LOCKED]** Phase 2A's first live run against a real target may proceed **only when every currently-applicable gate in Groups A through L passes** (Group I's AC-027/AC-028 excepted — N/A/DEFERRED FOR MVP), including REG-TOOL-001, REG-WORKER-001, and REG-SKILL-001 (now defined in `11` §1b). There is no partial-release state among the gates that do apply — a pipeline that finds real vulnerabilities but fails AC-032 (the firewall) or AC-029 (human validation) has not met the bar Track A set for itself, regardless of how good its findings look.
 
 This mirrors the same discipline this project applied to Phase 1's own exit criteria much earlier in its history: a phase exits on a checklist being fully satisfied, not on a calendar date.
 

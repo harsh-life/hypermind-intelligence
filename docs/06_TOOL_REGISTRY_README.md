@@ -140,7 +140,9 @@ Label legend unchanged — **[LOCKED] [REQ] [REC] [ASSUMPTION] [OPEN — REQUIRE
 
 ## 5. Nuclei
 
-**[OPEN — REQUIRES HARSH] OD-17.** The master prompt lists Nuclei as included "where explicitly supported" (`01` §11) — phrasing that implies a restriction exists but does not specify what it is. Nuclei's full public template library includes many templates far more intrusive than passive detection (some templates actively attempt exploitation to confirm a finding). Registering "Nuclei" without a curated template allowlist would, in practice, register whatever the full upstream template set contains — which conflicts with the isolation/least-harm posture the rest of this registry maintains. This document does not invent a template allowlist; it flags that one is needed and marks Nuclei's entry as requiring one before activation.
+**[PARTIALLY LOCKED — OD-17, see `13_OPEN_DECISIONS.md`]** The *authorization model* is LOCKED: the model may reason about what it needs, request a Nuclei capability dynamically, and that request passes through the Scope Gate/policy check before execution — the same MODEL DECIDES → POLICY/SCOPE AUTHORIZES → TOOL EXECUTES boundary every other tool follows, not a pre-built static allowlist. The entry below's `[REQ, blocking]` failure-handling note (requiring a curated allowlist as a *precondition*) is superseded to that extent — Nuclei is authorized the same way as any other tool, not gated behind a separate static-list precondition. **The concrete template/capability policy itself remains DEFERRED, not resolved:** which specific templates/capabilities are actually permitted is real security-judgment work left to the Nuclei activation/implementation phase, and this entry does not itself grant Nuclei `active` status.
+
+*(Original framing, retained for context only — no longer the operative constraint:)* The master prompt lists Nuclei as included "where explicitly supported" (`01` §11) — phrasing that implies a restriction exists but does not specify what it is. Nuclei's full public template library includes many templates far more intrusive than passive detection (some templates actively attempt exploitation to confirm a finding).
 
 ```json
 {
@@ -221,6 +223,8 @@ Label legend unchanged — **[LOCKED] [REQ] [REC] [ASSUMPTION] [OPEN — REQUIRE
 
 ## 8. Promptfoo — **PROVISIONAL, pending OD-01**
 
+**[NOTE — OD-01 resolved 2026-09-15, see `13_OPEN_DECISIONS.md`]** Promptfoo is kept for MVP, but repositioned into the **model-evaluation/benchmarking toolchain** (`11` §12, `16`), not reinstated for this Tool-Registry use case (scanning third-party AI targets). This entry's `provisional_pending_OD-01` / inactive status for target-scanning use is therefore **unaffected by the resolution** pending Harsh's explicit confirmation — see `13_OPEN_DECISIONS.md` §3, item 2.
+
 ```json
 {
   "tool_id": "promptfoo",
@@ -245,9 +249,9 @@ Label legend unchanged — **[LOCKED] [REQ] [REC] [ASSUMPTION] [OPEN — REQUIRE
 
 ---
 
-## Cross-Cutting Note: Network Scoping (New Open Decision)
+## Cross-Cutting Note: Network Scoping (OD-18 — RESOLVED, see `13_OPEN_DECISIONS.md`)
 
-**[OPEN — REQUIRES HARSH] OD-18.** Every active tool above (Httpx, Katana, Ffuf, Nuclei, Garak, PyRIT, Promptfoo) has its `network_requirements.egress` written as "the authorized target's hosts ONLY" — but neither `01`, `02`, nor `03` specify **how** that scoping is actually enforced at the container-network level, on a per-run basis. This matters because a static, broadly-worded manifest ("egress: HTTPS to target hosts") doesn't by itself prevent a container from reaching a *different* host than the one the current run's `ScopeDecision` (`03` §2.2) actually authorized — the manifest describes *intent*, not an enforced technical boundary. Something needs to translate "the target authorized for *this run*" into an actual firewall/network-policy rule applied to *that specific container invocation*. This is very likely `07_DOCKER_SPEC/`'s job, but it isn't a solved problem yet at this point in the documentation package, so it's flagged rather than assumed solved.
+**[LOCKED — resolved 2026-09-15, see `13_OPEN_DECISIONS.md` OD-18]** Every active tool above (Httpx, Katana, Ffuf, Nuclei, Garak, PyRIT, Promptfoo) has its `network_requirements.egress` written as "the authorized target's hosts ONLY." This is enforced by the **Scope Gate**: every network-capable tool request a model/worker proposes is checked against the current run's authorized RunScope before the Orchestrator authorizes execution (`02` §11's existing scope-validation check). A tool request outside RunScope is never executed. This is *not* enforced by a network-layer proxy — `07` §4's forced-egress-proxy proposal is explicitly not adopted as an MVP requirement; it remains a possible future defense-in-depth addition, not a current one. Do not read any per-tool `network_requirements.egress` line below as describing an enforced network boundary in itself — the enforcement point is the Scope Gate check on the proposed action, not the manifest text.
 
 ---
 
@@ -255,8 +259,8 @@ Label legend unchanged — **[LOCKED] [REQ] [REC] [ASSUMPTION] [OPEN — REQUIRE
 
 | ID | Question | Raised in |
 |---|---|---|
-| **OD-17** | Nuclei is included "where explicitly supported" per `01` §11, but no curated template-tag allowlist exists yet. Which template categories/tags are approved for use, given the full public template library includes intrusive/exploitative templates? | §5 (Nuclei) |
-| **OD-18** | How is per-tool network egress dynamically scoped to the *current run's* authorized target (from `ScopeDecision`), rather than being a static intent-only description in each tool's manifest? | Cross-cutting note above |
+| **OD-17** | **PARTIALLY RESOLVED 2026-09-15** — see `13_OPEN_DECISIONS.md`. Authorization model (capability-request-through-Scope-Gate) is LOCKED; the concrete template/capability policy is DEFERRED to Nuclei's activation/implementation phase. | §5 (Nuclei) |
+| **OD-18** | **RESOLVED 2026-09-15** — see `13_OPEN_DECISIONS.md`. Scope Gate is the enforcement checkpoint; no proxy mandated. | Cross-cutting note above |
 | **OD-19** | `03`'s `ToolManifest` schema (§2.4) omitted a distinct `expected_output` field that master-prompt STEP 06 explicitly lists separately from `output_schema`. This document added `expected_output` (free-text description) to every entry above to satisfy the master prompt's actual field list, but `03` itself doesn't yet define it as a schema field — should `03` be amended to add it formally? | Discovered while writing every entry in this document |
 
 Carried forward with OD-01 through OD-16 into `13_OPEN_DECISIONS.md`. Running total: **19 open decisions.**
