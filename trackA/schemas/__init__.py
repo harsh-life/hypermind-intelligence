@@ -25,8 +25,15 @@ Prefer the canonical (right-hand) names in new code; the left-hand
 aliases exist so downstream subsystems can use either.
 
     RunScope            -> trackA.schemas.scope.RunScope
+                           (Context 3: the structured, engagement-specific
+                            authorization object from docs/03 §4.4 / OD-23 —
+                            see RunScope's own docstring. An earlier context
+                            used this name for the ScopeRequest+ScopeDecision
+                            pairing; that type is now named
+                            `ScopeAuthorization`, see below.)
+    ScopeAuthorization  -> trackA.schemas.scope.ScopeAuthorization
                            (constructed pairing of ScopeRequest + ScopeDecision,
-                            docs/03 §2.1-2.2 — see RunScope's own docstring)
+                            docs/03 §2.1-2.2 — see its own docstring)
     Run                 -> trackA.schemas.scope.Run
                            (UNRESOLVED AMBIGUITY: no dedicated schema exists in
                             any doc — see Run's own docstring)
@@ -96,7 +103,7 @@ from trackA.schemas.research import (
     ToolSequenceEntry,
     ToolSequenceRecord,
 )
-from trackA.schemas.scope import Run, RunScope, ScopeDecision, ScopeRequest
+from trackA.schemas.scope import Run, RunScope, ScopeAuthorization, ScopeDecision, ScopeRequest
 from trackA.schemas.skills import SkillManifest, SpecialistInput, SpecialistPoCOutput
 from trackA.schemas.tools import (
     RawToolOutput,
@@ -126,6 +133,7 @@ __all__ = [
     # scope / run
     "ScopeRequest",
     "ScopeDecision",
+    "ScopeAuthorization",
     "RunScope",
     "Run",
     # orchestrator
