@@ -1,0 +1,22 @@
+{
+  "candidate_id": "qwen2.5-3b-judge",
+  "model_identity": "Qwen2.5-3B-Instruct",
+  "source_provider": "Hugging Face / Alibaba, served locally via Ollama",
+  "version": "q4_k_m",
+  "intended_worker_role": "judge",
+  "execution_location": "local",
+  "runtime_requirements": {"min_ram_gb": 6, "min_vram_gb": 0, "quantization": "Q4_K_M"},
+  "input_format": "json_mode chat prompt",
+  "output_schema_compatibility": "json_mode",
+  "benchmark_status": "NOT_YET_BENCHMARKED",
+  "quality_metrics": {
+    "structured_output_validity_rate": null,
+    "useful_hypothesis_rate": null,
+    "false_positive_rate": null
+  },
+  "cost_per_call_usd": 0.0,
+  "known_limitations": "Judge model identity is UNDECIDED per docs/08_MODEL_REGISTRY.md - registered here only as one unapproved candidate demonstrating that the same underlying model identity (Qwen2.5-3B-Instruct) can serve a different role (judge) than qwen2.5-3b-worker (endpoint_mapper) via a separate candidate_id, per ModelManifest.intended_worker_role being a single-role field (docs/08, Context-1-locked).",
+  "security_suitability_notes": "Must never share weights or prompts with any Specialist candidate in the same run (docs/01_ARCHITECTURE.md SS19.7, Judge Principle) - this is enforced by the pipeline/Orchestrator, not by this manifest field.",
+  "approval_status": "candidate",
+  "replacement_policy": "Subject to the docs/16_EVALUATION_BENCHMARKING.md trajectory-based benchmark before any promotion to approved; Judge/Specialist model-family diversity is not architecturally mandated (OD-22, reversed) but may be considered during evaluation."
+}

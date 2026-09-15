@@ -1,0 +1,35 @@
+{
+  "tool_id": "subfinder",
+  "name": "Subfinder",
+  "version": "v2.6.3",
+  "purpose": "Passive subdomain enumeration using public sources - does not send requests to the target itself.",
+  "category": "recon",
+  "input_schema": {
+    "type": "object",
+    "properties": {"domain": {"type": "string"}},
+    "required": ["domain"]
+  },
+  "output_schema": {
+    "type": "array",
+    "items": {"type": "string"},
+    "description": "advisory - one discovered subdomain per entry"
+  },
+  "expected_output": "A list of subdomains believed to belong to the target domain, sourced from passive/public data - not confirmed live or reachable (that's Httpx's job downstream).",
+  "container_image": "<PINNED_DIGEST_REQUIRED>",
+  "network_requirements": {
+    "egress": "DNS + HTTPS to passive-source APIs only; no direct contact with the target's infrastructure since this tool is passive by design"
+  },
+  "filesystem_requirements": {"read_only_root": true, "scratch_space_mb": 50},
+  "resource_limits": {"cpu": "1", "memory_mb": 512, "pid_limit": 64},
+  "timeout_seconds": 120,
+  "allowed_stages": ["tool_execution"],
+  "risk_classification": "low",
+  "failure_handling": "On timeout, treat any partial output as untrusted; do not auto-retry - a timeout on a passive lookup is usually a source outage, not a transient error worth retrying blindly.",
+  "audit_requirements": "Log domain input and exit code. Full output list may be logged (non-sensitive, publicly-sourced subdomain names).",
+  "provenance": {
+    "created_by": "harsh",
+    "source_basis": "docs/06_TOOL_REGISTRY_README.md SS1",
+    "version": "1.0.0"
+  },
+  "validation_status": "active"
+}

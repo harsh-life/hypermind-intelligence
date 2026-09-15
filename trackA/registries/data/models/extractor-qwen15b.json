@@ -1,0 +1,22 @@
+{
+  "candidate_id": "qwen2.5-1.5b-extractor",
+  "model_identity": "Qwen2.5-1.5B-Instruct",
+  "source_provider": "Hugging Face / Alibaba, served locally via Ollama",
+  "version": "q4_k_m",
+  "intended_worker_role": "extractor",
+  "execution_location": "local",
+  "runtime_requirements": {"min_ram_gb": 4, "min_vram_gb": 0, "quantization": "Q4_K_M"},
+  "input_format": "GBNF-constrained chat prompt",
+  "output_schema_compatibility": "gbnf",
+  "benchmark_status": "NOT_YET_BENCHMARKED",
+  "quality_metrics": {
+    "structured_output_validity_rate": null,
+    "useful_hypothesis_rate": null,
+    "false_positive_rate": null
+  },
+  "cost_per_call_usd": 0.0,
+  "known_limitations": "Not yet benchmarked in this repository - no quality claim is made beyond the architectural decision to lock this role (docs/08_MODEL_REGISTRY.md SS2, docs/15_ENGINEERING_HANDOFF.md SS2).",
+  "security_suitability_notes": "Runs local-only, --network=none per docs/01_ARCHITECTURE.md SS7 - no external data exposure from this role.",
+  "approval_status": "approved",
+  "replacement_policy": "Locked by architectural decision (docs/01 SS10, docs/08 SS'Currently Selected Implementations'), not by the OD-27 competitive benchmark protocol that governs every other role - replace only via an explicit architecture-level decision, not an automatic re-benchmark trigger."
+}

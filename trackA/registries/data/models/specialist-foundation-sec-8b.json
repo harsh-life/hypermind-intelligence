@@ -1,0 +1,22 @@
+{
+  "candidate_id": "cand-001-foundation-sec-8b",
+  "model_identity": "Foundation-Sec-8B",
+  "source_provider": "Hugging Face / Cisco Foundation AI, released Apr 2025",
+  "version": "release-2025-04",
+  "intended_worker_role": "specialist",
+  "execution_location": "local",
+  "runtime_requirements": {"min_ram_gb": 16, "min_vram_gb": 8, "quantization": "fp16"},
+  "input_format": "chat template",
+  "output_schema_compatibility": "json_mode",
+  "benchmark_status": "NOT_YET_BENCHMARKED",
+  "quality_metrics": {
+    "structured_output_validity_rate": null,
+    "useful_hypothesis_rate": null,
+    "false_positive_rate": null
+  },
+  "cost_per_call_usd": 0.0,
+  "known_limitations": "Llama-3.1-8B continued-pretrained on cybersecurity corpus; competitive with larger models on CTIBENCH per its own technical report - a vendor claim, not independently verified (docs/08_MODEL_REGISTRY.md). No benchmark run in this repository.",
+  "security_suitability_notes": "Apache 2.0 license; no known jailbreak/uncensored-marketing concerns documented at this time.",
+  "approval_status": "candidate",
+  "replacement_policy": "Subject to the docs/16_EVALUATION_BENCHMARKING.md trajectory-based benchmark before any promotion to approved (OD-27)."
+}

@@ -1,0 +1,31 @@
+{
+  "worker_id": "endpoint_mapper_v1",
+  "purpose": "Map every reachable endpoint in the ExtractorJSON and identify those containing object references (numeric IDs, UUIDs, sequential parameters).",
+  "input_schema": {
+    "type": "object",
+    "properties": {"entities": {"type": "array"}}
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {"mapped_endpoints": {"type": "array"}}
+  },
+  "worker_role_binding": "endpoint_mapper",
+  "system_prompt": "You map API endpoints from ExtractorJSON entities. You do not evaluate whether any endpoint is vulnerable - that is Stage 2 (Judge) and Stage 3 (Specialist) work.",
+  "allowed_tools": [],
+  "timeout_seconds": 60,
+  "retry_limit": 2,
+  "resource_limits": {"max_tokens": 2048},
+  "success_criteria": "produces a structured endpoint map citing the ExtractorJSON entity each claim came from",
+  "failure_criteria": "output is not valid JSON, or contains no endpoints when the input clearly had some",
+  "must_not": [
+    "evaluate vulnerability likelihood",
+    "propose exploit steps",
+    "assert exploitability"
+  ],
+  "provenance_requirements": "log input entity count and output endpoint count",
+  "provenance": {
+    "created_by": "harsh",
+    "source_basis": "docs/04_WORKER_SKILL_CONTRACTS.md 'Initial Workers (v1.0)'",
+    "version": "1.0.0"
+  }
+}
