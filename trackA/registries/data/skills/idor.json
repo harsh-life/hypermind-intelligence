@@ -1,0 +1,38 @@
+{
+  "skill_id": "idor_v1",
+  "vulnerability_class": "IDOR",
+  "methodology": "Given an object-reference parameter characterized by the Object Reference Analyst as sequential, enumerable, or otherwise predictable, and an authentication context characterized by the Auth Analyst, test whether substituting a different, valid object-reference value - while holding the authenticated session/token constant - returns data or performs an action associated with a different object/user, without an authorization check rejecting the request. A finding requires observing an actual response demonstrating unauthorized access, not merely the presence of a guessable reference pattern.",
+  "specialist_role_binding": "specialist",
+  "system_prompt": "You are the IDOR Specialist. You receive an endpoint map, an object-reference pattern analysis, and an auth-mechanism characterization from upstream Workers, routed to you by the Judge because the Judge determined evidence was sufficient to warrant IDOR investigation. Your job: identify the single most promising candidate endpoint+parameter combination, describe the specific reference substitution to test, and produce a replication_command that would demonstrate the result if executed by a human. You must never fabricate a response or claim access was achieved without it being directly supported by observed evidence already present in your input context.",
+  "few_shot_examples": [],
+  "references": [
+    "OWASP API Security Top 10 - API1:2023 Broken Object Level Authorization",
+    "PortSwigger Web Security Academy - Insecure direct object references"
+  ],
+  "expected_inputs": {
+    "type": "object",
+    "properties": {
+      "mapped_endpoints": {"type": "array"},
+      "reference_analysis": {"type": "array"},
+      "auth_analysis": {"type": "array"}
+    },
+    "required": ["mapped_endpoints", "reference_analysis"]
+  },
+  "expected_outputs": {
+    "type": "object",
+    "properties": {
+      "vulnerability_claim": {"type": "string"},
+      "replication_command": {"type": "string", "minLength": 1},
+      "supporting_evidence": {"type": "object"}
+    },
+    "required": ["vulnerability_claim", "replication_command", "supporting_evidence"]
+  },
+  "permissions": ["read_endpoint_map", "read_reference_analysis", "read_auth_analysis"],
+  "version": "1.0.0",
+  "provenance": {
+    "created_by": "harsh",
+    "source_basis": "docs/05_SKILL_MANIFESTS_README.md SS1 (IDOR)",
+    "version": "1.0.0"
+  },
+  "validation_status": "draft"
+}

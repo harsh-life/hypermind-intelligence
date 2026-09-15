@@ -1,0 +1,35 @@
+{
+  "tool_id": "httpx",
+  "name": "Httpx",
+  "version": "v1.6.x",
+  "purpose": "Actively probe a list of hosts for HTTP/HTTPS liveness, status code, response headers, and basic technology fingerprinting.",
+  "category": "recon",
+  "input_schema": {
+    "type": "object",
+    "properties": {"hosts": {"type": "array", "items": {"type": "string"}}},
+    "required": ["hosts"]
+  },
+  "output_schema": {
+    "type": "array",
+    "items": {"type": "object"},
+    "description": "advisory - one object per probed host with status_code, title, tech fingerprint"
+  },
+  "expected_output": "For each input host: whether it responded, its status code, page title if HTML, and any detectable technology fingerprint. Read-only probing - no state-changing requests.",
+  "container_image": "<PINNED_DIGEST_REQUIRED>",
+  "network_requirements": {
+    "egress": "HTTP/HTTPS to the authorized target's hosts ONLY - enforced by the Scope Gate (docs/13 OD-18), not this manifest"
+  },
+  "filesystem_requirements": {"read_only_root": true, "scratch_space_mb": 50},
+  "resource_limits": {"cpu": "1", "memory_mb": 256, "pid_limit": 32},
+  "timeout_seconds": 90,
+  "allowed_stages": ["tool_execution"],
+  "risk_classification": "low",
+  "failure_handling": "Per-host failures (unreachable, timeout) are recorded as such in the output, not treated as a whole-tool failure - a partial success across many hosts is the expected common case.",
+  "audit_requirements": "Log host list input (count + hash, not necessarily every hostname if the list is large) and per-host response summary.",
+  "provenance": {
+    "created_by": "harsh",
+    "source_basis": "docs/06_TOOL_REGISTRY_README.md SS2",
+    "version": "1.0.0"
+  },
+  "validation_status": "active"
+}

@@ -1,0 +1,22 @@
+{
+  "candidate_id": "qwen2.5-3b-worker",
+  "model_identity": "Qwen2.5-3B-Instruct",
+  "source_provider": "Hugging Face / Alibaba, served locally via Ollama",
+  "version": "q4_k_m",
+  "intended_worker_role": "endpoint_mapper",
+  "execution_location": "local",
+  "runtime_requirements": {"min_ram_gb": 6, "min_vram_gb": 0, "quantization": "Q4_K_M"},
+  "input_format": "GBNF-constrained chat prompt",
+  "output_schema_compatibility": "gbnf",
+  "benchmark_status": "NOT_YET_BENCHMARKED",
+  "quality_metrics": {
+    "structured_output_validity_rate": null,
+    "useful_hypothesis_rate": null,
+    "false_positive_rate": null
+  },
+  "cost_per_call_usd": 0.0,
+  "known_limitations": "Not yet benchmarked in this repository.",
+  "security_suitability_notes": "Runs local-only, --network=none for Stage 1 Workers per docs/01_ARCHITECTURE.md SS7.",
+  "approval_status": "approved",
+  "replacement_policy": "Re-benchmark per docs/16_EVALUATION_BENCHMARKING.md before replacement; no automatic re-benchmark trigger (OD-02/OD-22 discussion, docs/13_OPEN_DECISIONS.md)."
+}
