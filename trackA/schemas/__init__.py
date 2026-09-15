@@ -73,6 +73,15 @@ aliases exist so downstream subsystems can use either.
     ScreenResult        -> trackA.schemas.common.ScreenResult (docs/02 §8 / OD-09)
     ToolManifest.expected_output
                         -> trackA.schemas.tools.ToolManifest.expected_output (OD-19)
+
+Context 4 addendum: `BenchmarkCase`, `TrajectoryStep`, `EvaluationTrajectory`,
+`EvaluationJudgePackage`, and `EvaluationJudgeVerdict` (trackA.schemas.
+evaluation) are new schemas with no docs/03 §2/§3 counterpart — see that
+module's docstring for why they are new rather than reusing/aliasing an
+existing type, and in particular why `EvaluationJudgePackage` is a
+*separate* type from the `JudgeEvaluationPackage = JudgeInput` alias above
+(they serve two structurally different Judge invocations: live-pipeline
+routing vs. benchmark-trajectory scoring).
 """
 from __future__ import annotations
 
@@ -83,6 +92,13 @@ from trackA.schemas.common import (
     Provenance,
     ScreenResult,
     TrustClassification,
+)
+from trackA.schemas.evaluation import (
+    BenchmarkCase,
+    EvaluationJudgePackage,
+    EvaluationJudgeVerdict,
+    EvaluationTrajectory,
+    TrajectoryStep,
 )
 from trackA.schemas.extraction import ExtractedEntity, ExtractorInput, ExtractorJSON
 from trackA.schemas.gates import CheckResult, DeduplicationResult, EvidenceGateResult
@@ -193,4 +209,10 @@ __all__ = [
     "ModelManifest",
     "ModelRuntimeRequirements",
     "ModelQualityMetrics",
+    # evaluation (Context 4)
+    "BenchmarkCase",
+    "TrajectoryStep",
+    "EvaluationTrajectory",
+    "EvaluationJudgePackage",
+    "EvaluationJudgeVerdict",
 ]
