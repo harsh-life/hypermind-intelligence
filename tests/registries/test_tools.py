@@ -127,3 +127,27 @@ def test_from_directory_loads_real_seed_manifests():
 def test_from_directory_missing_directory_raises():
     with pytest.raises(ValueError):
         ToolRegistry.from_directory(SEED_DATA_DIR / "does_not_exist")
+
+
+def test_from_directory_supports_yaml_manifests(tmp_path, tool_data):
+    """docs/13 OD-08: canonical registry storage is 'JSON/YAML files' —
+    YAML must actually load, not just be mentioned in a docstring."""
+    import yaml
+
+    (tmp_path / "httpx.yaml").write_text(yaml.safe_dump(tool_data(tool_id="httpx", name="Httpx")))
+    registry = ToolRegistry.from_directory(tmp_path)
+    assert registry.lookup("httpx").name == "Httpx"
+
+
+def test_from_directory_rejects_unsupported_extension(tmp_path, tool_data):
+    import json
+
+    (tmp_path / "subfinder.txt").write_text(json.dumps(tool_data()))
+    registry = ToolRegistry.from_directory(tmp_path)
+    assert len(registry) == 0  # unsupported extension is simply not picked up
+
+
+def test_from_directory_rejects_non_object_top_level(tmp_path):
+    (tmp_path / "bad.json").write_text("[1, 2, 3]")
+    with pytest.raises(ValueError):
+        ToolRegistry.from_directory(tmp_path)
