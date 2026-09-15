@@ -53,7 +53,7 @@ aliases exist so downstream subsystems can use either.
     Report/provenance structures
                         -> trackA.schemas.human.Report (docs/03 §2.21),
                            trackA.schemas.common.Provenance (docs/03 §1.1),
-                           trackA.schemas.common.ManifestProvenance (OD-15/FINDING-2)
+                           trackA.schemas.common.ManifestProvenance (OD-15, [LOCKED])
     Model records       -> trackA.schemas.models.ModelManifest (docs/08, candidate
                            model manifest only — no registry-state schema)
     Experiment / Trajectory records

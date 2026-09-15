@@ -109,16 +109,18 @@ class ManifestProvenance(HypermindModel):
     once by a human), as distinct from the pipeline-run-oriented Provenance
     above.
 
-    This type does not exist as such in docs/03 today. It implements the
-    *recommended* (not yet Harsh-ratified) resolution to OD-15
-    (docs/13_OPEN_DECISIONS.md) as widened by FINDING-2
-    (docs/14_CONSISTENCY_AUDIT.md): "define a single lightweight
-    ManifestProvenance type ({created_by, created_at, source_basis,
-    version}) and apply it uniformly to ToolManifest, WorkerManifest, and
-    SkillManifest." Implemented here because the calling task explicitly
-    named ManifestProvenance as a required contract — flagged in the
-    schema-layer report as an open-decision recommendation, not a locked
-    architectural fact.
+    [LOCKED — architecture-owner approved.] Resolves OD-15
+    (docs/13_OPEN_DECISIONS.md), as widened by FINDING-2
+    (docs/14_CONSISTENCY_AUDIT.md): a single lightweight ManifestProvenance
+    type ({created_by, created_at, source_basis, version}) applied
+    uniformly to ToolManifest, WorkerManifest, and SkillManifest. It
+    replaces SkillManifest's prior use of the pipeline-run-oriented
+    `Provenance` type, and adds a `provenance` field to ToolManifest and
+    WorkerManifest, which previously had none (their existing free-text
+    `audit_requirements`/`provenance_requirements` fields describe
+    *runtime logging* requirements — a different concept — and are
+    unchanged). docs/13_OPEN_DECISIONS.md OD-15 is marked LOCKED to
+    reflect this decision; it is no longer an open recommendation.
     """
 
     created_by: str

@@ -43,6 +43,18 @@ def test_tool_manifest_extensible_category_accepted():
     assert tm.category == "vulnerability_scan"
 
 
+def test_tool_manifest_nuclei_style_high_risk_accepted():
+    # Architecture-owner decision: the enum stays closed at low/medium/high;
+    # a Nuclei-style entry is corrected to "high", not "medium-high".
+    tm = _tool_manifest(
+        tool_id="nuclei",
+        name="Nuclei",
+        category="vulnerability_scan",
+        risk_classification="high",
+    )
+    assert tm.risk_classification == "high"
+
+
 def test_tool_manifest_rejects_non_positive_timeout():
     with pytest.raises(ValidationError):
         _tool_manifest(timeout_seconds=0)

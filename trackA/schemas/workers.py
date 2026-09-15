@@ -13,35 +13,30 @@ from trackA.schemas.common import ManifestProvenance, PipelineStage, Provenance,
 
 
 class WorkerManifest(HypermindModel):
-    """docs/03 §2.10, [LOCKED field list], RECONCILED.
+    """docs/03 §2.10, [LOCKED field list], FINAL per architecture-owner
+    decision (Context-1 schema-decisions review — do not reopen).
 
-    Two deliberate deviations from docs/03's literal text, both flagged:
+    Two confirmed deviations from docs/03's original literal text:
 
-    - docs/03 §2.10 names the model-pointer field `model` ("references a
-      Model Registry role/model_id"). docs/04_WORKER_SKILL_CONTRACTS.md
-      instead specifies `worker_role_binding` — "a POINTER, not a model
-      identifier" — with an explicit rationale: the worker contract must
-      survive a model swap unmodified, so it names a *role*, never a
-      model. docs/01_ARCHITECTURE.md §4 [LOCKED] states the same
-      principle generally ("the worker contract... does NOT hardcode
-      which model fulfils it"). Since the calling task requires
-      preserving "model-role vs model-identity separation" and docs/04
-      is one of its named authoritative documents, this implementation
-      uses `worker_role_binding` (docs/04's field), not `model`
-      (docs/03's field), for the same slot. All of docs/03's other
-      fields are kept as-is.
-    - `provenance: ManifestProvenance` is added, per OD-15/FINDING-2 (see
-      trackA/schemas/common.py's ManifestProvenance docstring). docs/03's
-      WorkerManifest has no authorship-provenance field, only the
-      unrelated `provenance_requirements` (what to log at *runtime*,
-      kept below, unchanged).
+    - The model-pointer field is `worker_role_binding`, not docs/03's
+      `model` field (docs/03's `model` field is superseded). Per
+      docs/04_WORKER_SKILL_CONTRACTS.md's design — "a POINTER, not a
+      model identifier" — and docs/01_ARCHITECTURE.md §4 [LOCKED]'s
+      general principle that a worker contract "does NOT hardcode which
+      model fulfils it": the manifest must point to a worker *role*,
+      never a concrete model identity. All of docs/03's other fields are
+      kept as-is.
+    - `provenance: ManifestProvenance` is added, per OD-15 (docs/13_OPEN_
+      DECISIONS.md, [LOCKED] — see trackA/schemas/common.py's
+      ManifestProvenance docstring). docs/03's WorkerManifest has no
+      authorship-provenance field, only the unrelated
+      `provenance_requirements` (what to log at *runtime*, kept below,
+      unchanged).
 
     NOT implemented: docs/04's own, differently-shaped WorkerManifest
     sketch (role/input/task/output/evidence/limits/escalation/quality
-    nested structure). docs/03 is the schema actually cited by
-    docs/02_COMPONENT_SPECS.md §2 as the canonical shape; docs/04's
-    sketch appears to be an earlier, unreconciled draft. Flagged in the
-    schema-layer report as an unresolved cross-document inconsistency.
+    nested structure) — docs/03's flatter field set remains canonical;
+    only the model-pointer field name was swapped for docs/04's.
     """
 
     worker_id: str
@@ -87,15 +82,14 @@ class WorkerInput(HypermindModel):
 class WorkerOutput(HypermindModel):
     """docs/03 §2.12. Produced by: Worker Execution Framework.
 
-    NOTE: docs/04_WORKER_SKILL_CONTRACTS.md's "WorkerOutput Schema"
-    section defines a materially different shape
+    [FINAL per architecture-owner decision — do not reopen.] docs/03
+    §2.12's shape is canonical, per docs/02_COMPONENT_SPECS.md §14's
+    explicit citation of docs/03 as the schema authority for
+    WorkerOutput. docs/04_WORKER_SKILL_CONTRACTS.md's differently-shaped
+    inline "WorkerOutput Schema" sketch
     (worker_id/version/target/timestamp/findings[]/status/failure_reason)
-    from this one. This implementation follows docs/03 §2.12 (the
-    canonical schema, cited directly by docs/02_COMPONENT_SPECS.md §14
-    and consistent with the general Provenance/trust_classification
-    pattern used everywhere else in docs/03). docs/04's sketch is treated
-    as an earlier, unreconciled draft — flagged in the schema-layer
-    report; this conflict was not caught by docs/14_CONSISTENCY_AUDIT.md.
+    is marked superseded/stale in docs/04 itself and must not be
+    implemented against.
     """
 
     provenance: Provenance

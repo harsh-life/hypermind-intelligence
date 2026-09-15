@@ -16,39 +16,38 @@ from trackA.schemas.common import ManifestProvenance, Provenance, TrustClassific
 
 
 class SkillManifest(HypermindModel):
-    """docs/03 §2.15, [LOCKED field list], RECONCILED.
+    """docs/03 §2.15, [LOCKED field list], FINAL per architecture-owner
+    decision (Context-1 schema-decisions review — do not reopen).
 
-    Two deliberate deviations from docs/03's literal text, both flagged:
+    Two confirmed deviations from docs/03's original literal text:
 
-    - `specialist_role_binding` is ADDED. docs/03 §2.15's SkillManifest
-      (and every instance actually written in docs/05_SKILL_MANIFESTS_
-      README.md — idor_v1/ssrf_v1/auth_bypass_v1/privilege_escalation_v1)
-      has NO field pointing at a Model Registry role at all. But
-      docs/04_WORKER_SKILL_CONTRACTS.md explicitly designs
-      `specialist_role_binding` for exactly this purpose, with the same
-      "pointer, not a model identifier" rationale used for
-      WorkerManifest, and docs/01_ARCHITECTURE.md §4 [LOCKED] requires
-      this separation architecturally for "a worker or skill contract."
-      This is a gap in docs/03/docs/05 that docs/14_CONSISTENCY_AUDIT.md
-      did not catch. Since the calling task requires preserving
-      "model-role vs model-identity separation" and names docs/04 as
-      authoritative, this field is added here. Flagged in the
-      schema-layer report as an unresolved documentation gap, not a
-      silent invention — the field, its name, and its rationale are all
-      taken directly from docs/04.
+    - `specialist_role_binding` is ADDED (canonical field). docs/03
+      §2.15's SkillManifest, and every instance actually written in
+      docs/05_SKILL_MANIFESTS_README.md, previously had no field pointing
+      at a Model Registry role at all. Per docs/04_WORKER_SKILL_CONTRACTS
+      .md's design (same "pointer, not a model identifier" rationale as
+      WorkerManifest.worker_role_binding) and docs/01_ARCHITECTURE.md §4
+      [LOCKED]'s role/implementation separation, a skill manifest must
+      point to a specialist *role*, never a concrete model identity.
+      **For MVP the canonical value is the generic role name
+      `"specialist"`** (defaulted below, applying to every skill alike).
+      Do not mint per-vulnerability roles such as `"specialist_idor"`
+      unless a future validated evaluation demonstrates that separate
+      specialist roles are actually required — the field stays an open
+      `str` (not a closed enum) specifically so that evaluation can
+      change the value later without a schema change.
     - `provenance: ManifestProvenance` replaces docs/03's `provenance:
-      Provenance` (the pipeline-run-oriented common type). This is
-      exactly OD-15's original scope (docs/13_OPEN_DECISIONS.md) before
-      FINDING-2 widened it to all three manifest types — a `Provenance`
-      requires a `run_id`, which does not naturally exist for a manifest
-      authored once by a human outside any pipeline run. See
-      trackA/schemas/common.py's ManifestProvenance docstring.
+      Provenance` (the pipeline-run-oriented common type). Per OD-15
+      (docs/13_OPEN_DECISIONS.md, [LOCKED] — see trackA/schemas/common.py's
+      ManifestProvenance docstring): a `Provenance` requires a `run_id`,
+      which does not naturally exist for a manifest authored once by a
+      human outside any pipeline run.
     """
 
     skill_id: str
     vulnerability_class: str
     methodology: str
-    specialist_role_binding: str
+    specialist_role_binding: str = "specialist"
     system_prompt: str
     few_shot_examples: List[Dict[str, Any]]
     references: List[str]

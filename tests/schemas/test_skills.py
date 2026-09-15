@@ -13,7 +13,6 @@ def _skill_manifest(**overrides):
         skill_id="idor_v1",
         vulnerability_class="IDOR",
         methodology="Given an object-reference parameter characterized as sequential...",
-        specialist_role_binding="specialist_idor",
         system_prompt="You are the IDOR Specialist.",
         few_shot_examples=[],
         references=["https://owasp.org/www-community/attacks/..."],
@@ -28,8 +27,18 @@ def _skill_manifest(**overrides):
     return SkillManifest(**data)
 
 
-def test_skill_manifest_valid_has_role_binding():
+def test_skill_manifest_defaults_to_generic_specialist_role_for_mvp():
+    # Architecture-owner decision: MVP uses the generic "specialist" role
+    # name for every skill, not a per-vulnerability role.
     manifest = _skill_manifest()
+    assert manifest.specialist_role_binding == "specialist"
+
+
+def test_skill_manifest_still_permits_explicit_per_vulnerability_override():
+    # The field stays an open str (not a closed enum) specifically so a
+    # future validated evaluation can justify a per-vulnerability role
+    # without a schema change — but "specialist" remains the MVP default.
+    manifest = _skill_manifest(specialist_role_binding="specialist_idor")
     assert manifest.specialist_role_binding == "specialist_idor"
 
 

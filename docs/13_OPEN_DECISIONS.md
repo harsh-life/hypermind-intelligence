@@ -9,11 +9,11 @@
 
 ## How This Document Is Organized
 
-26 live decisions (OD-01 through OD-27; OD-07 was reserved into OD-04's scope and never became a separate item — noted for numbering continuity, not a gap). Grouped by **blocking severity**, since that's what determines what Harsh should look at first:
+25 open decisions plus 1 resolved (OD-01 through OD-27; OD-07 was reserved into OD-04's scope and never became a separate item — noted for numbering continuity, not a gap). Grouped by **blocking severity**, since that's what determines what Harsh should look at first:
 
 - **§1 — Full MVP blockers** (12 items): Phase 2A cannot launch its first live run until these resolve. *(Updated in the final correction pass — OD-05 moved out to §3 as an over-classification correction; see its entry.)*
 - **§2 — Partial blockers** (3 items): block one specific capability, not the MVP generally.
-- **§3 — Non-blocking** (11 items): can be decided on a more relaxed timeline, several with a natural trigger for revisiting rather than a hard date.
+- **§3 — Non-blocking** (10 open items + OD-15, now [LOCKED]/resolved): can be decided on a more relaxed timeline, several with a natural trigger for revisiting rather than a hard date. OD-15 is kept in this section for numbering continuity but is no longer open — see its entry.
 
 Within each group, entries are in OD-number order for easy cross-reference back to the document that raised them.
 
@@ -184,11 +184,11 @@ Within each group, entries are in OD-number order for easy cross-reference back 
 **Owner:** Harsh · **Deadline:** before Skill Registry implementation, low urgency · **Blocking:** No
 **Origin:** `03` §2.15
 
-## OD-15 — Manifest provenance/authorship metadata is handled inconsistently across all three manifest types **(widened in the final correction pass — see note)**
-**Recommendation:** Amend `03` with a single lightweight `ManifestProvenance` type ({created_by, created_at, source_basis, version}) and apply it **uniformly to `ToolManifest`, `WorkerManifest`, and `SkillManifest`** — not just `SkillManifest`. The current stopgap for `SkillManifest.provenance` works fine in the meantime.
-**Widening note:** originally scoped to `SkillManifest.provenance`'s awkward fit with the pipeline-run `Provenance` type. The final correction pass's consistency check (`14` FINDING-2) found the inconsistency is broader: `ToolManifest` expresses this as free-text `audit_requirements`, `WorkerManifest` as free-text `provenance_requirements`, and `SkillManifest` alone uses a full typed (and ill-fitting) `Provenance` object. All three should converge on one lightweight type.
-**Owner:** Harsh · **Deadline:** before Skill Registry implementation locks formats, or during a `03` reconciliation pass · **Blocking:** No
-**Origin:** `05`; widened `14`
+## OD-15 — [LOCKED] Manifest provenance/authorship metadata converges on `ManifestProvenance` **(ARCHITECTURE-OWNER APPROVED — resolved during the Context-1 schema-implementation pass; no longer open)**
+**Decision:** A single lightweight `ManifestProvenance` type ({created_by, created_at, source_basis, version}) is authoritative, applied **uniformly to `ToolManifest`, `WorkerManifest`, and `SkillManifest`** — not just `SkillManifest`. This replaces `SkillManifest`'s prior use of the pipeline-run-oriented `Provenance` type, and adds a `provenance: ManifestProvenance` field to `ToolManifest` and `WorkerManifest`, which previously had none (their existing free-text `audit_requirements`/`provenance_requirements` fields describe *runtime logging* requirements, a different concept, and are unchanged).
+**Background (why this was raised):** originally scoped to `SkillManifest.provenance`'s awkward fit with the pipeline-run `Provenance` type (`Provenance` requires a `run_id`, which a manifest authored once by a human outside any pipeline run doesn't naturally have). The final correction pass's consistency check (`14` FINDING-2) found the inconsistency was broader: `ToolManifest` expressed this as free-text `audit_requirements`, `WorkerManifest` as free-text `provenance_requirements`, and `SkillManifest` alone used a full typed (and ill-fitting) `Provenance` object. All three now converge on `ManifestProvenance`.
+**Owner:** Harsh · **Resolved:** approved during the Context-1 schema-implementation pass · **Blocking:** No (was never a blocker; now moot — resolved)
+**Origin:** `05`; widened `14`; LOCKED by architecture-owner decision (Context-1 schema-decisions review)
 
 ## OD-16 — No bright-line rule between IDOR and Privilege Escalation
 **Recommendation:** Accept case-by-case Judge reasoning for MVP; only add explicit tie-breaking guidance if real findings show the ambiguity is actually causing inconsistent routing in practice.
@@ -245,7 +245,7 @@ Within each group, entries are in OD-number order for easy cross-reference back 
 | OD-12 | vulnerability_class enum shape | §3 | Harsh | No |
 | OD-13 | Output truncation cap | §1 | Harsh | Full MVP |
 | OD-14 | AI-security Skill gap | §2 | Harsh | AI-app targets only |
-| OD-15 | SkillManifest.provenance fit | §3 | Harsh | No |
+| OD-15 | ManifestProvenance, uniform across manifests | §3 | Harsh | **[LOCKED] Resolved — not blocking, not open** |
 | OD-16 | IDOR/PrivEsc boundary | §3 | Harsh | No |
 | OD-17 | Nuclei template allowlist | §2 | Harsh | Nuclei only |
 | OD-18 | Network egress scoping mechanism | §1 | Harsh | Full MVP (highest leverage) |
@@ -259,7 +259,7 @@ Within each group, entries are in OD-number order for easy cross-reference back 
 | OD-26 | Dataset contamination pruning policy | §3 | Harsh | No |
 | OD-27 | Benchmarking bootstrap dataset | §1 | Harsh | Full MVP |
 
-**12 full blockers, 3 partial blockers, 11 non-blocking** (updated in the final correction pass: OD-05 was reclassified from full-blocker to non-blocking as an over-classification correction — see its entry in §3). OD-07 was reserved into OD-04 and never became a standalone item.
+**12 full blockers, 3 partial blockers, 10 non-blocking, 1 resolved/[LOCKED] (OD-15)** (updated in the final correction pass: OD-05 was reclassified from full-blocker to non-blocking as an over-classification correction — see its entry in §3; OD-15 was subsequently resolved and marked LOCKED during the Context-1 schema-implementation pass). OD-07 was reserved into OD-04 and never became a standalone item.
 
 ---
 
@@ -267,7 +267,7 @@ Within each group, entries are in OD-number order for easy cross-reference back 
 
 Before `14`'s cross-document consistency audit, these concepts matter most:
 
-1. **Every recommendation in this document is a recommendation, not a decision.** Nothing here is `[LOCKED]` — that's the entire point of the document existing. `14`'s audit should treat every item as still open when checking for consistency, not assume any of these recommendations have been silently accepted just because they're written down with reasoning.
+1. **Every recommendation in this document is a recommendation, not a decision — with exactly one exception.** OD-15 has since been reviewed by the architecture owner and is marked `[LOCKED]`; every other item remains open. `14`'s audit (and any later reader) should treat every item other than OD-15 as still open when checking for consistency, not assume any of these recommendations have been silently accepted just because they're written down with reasoning.
 
 2. **OD-18 (network egress scoping) is the single highest-leverage item on this list.** It's the one decision that, once resolved, unblocks seven of eight registered tools simultaneously. If Harsh can only prioritize one full-blocker decision first, this is the one with the widest downstream effect.
 

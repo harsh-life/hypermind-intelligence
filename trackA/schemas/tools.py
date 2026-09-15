@@ -32,18 +32,18 @@ class ToolManifest(HypermindModel):
       that should be closed — "a documentation-cleanliness fix, not a
       functional gap." Included here since the task explicitly names
       `ToolManifest.expected_output`.
-    - `provenance: ManifestProvenance` is added per OD-15/FINDING-2 (see
-      trackA/schemas/common.py's ManifestProvenance docstring) — docs/03's
-      ToolManifest has no authorship-provenance field at all, only the
-      unrelated `audit_requirements` (what to log at *runtime*, kept
-      below, unchanged).
+    - `provenance: ManifestProvenance` is added per OD-15 (docs/13_OPEN_
+      DECISIONS.md, [LOCKED] — see trackA/schemas/common.py's
+      ManifestProvenance docstring) — docs/03's ToolManifest has no
+      authorship-provenance field at all, only the unrelated
+      `audit_requirements` (what to log at *runtime*, kept below,
+      unchanged).
 
-    NOTE: docs/03 §2.4 states `risk_classification` is a closed
-    `low | medium | high` enum, but docs/06's Nuclei entry instantiates
-    `"medium-high"`, a value outside that enum. This implementation
-    follows docs/03 (the schema-of-record) and treats docs/06's value as
-    an uncaught drafting inconsistency — flagged in the schema-layer
-    report, not silently widened into a fourth enum value.
+    [FINAL per architecture-owner decision — do not reopen.]
+    `risk_classification` stays the closed `low | medium | high` enum
+    from docs/03 §2.4; it is NOT expanded. docs/06's Nuclei entry, which
+    previously instantiated the out-of-enum value `"medium-high"`, has
+    been corrected to `"high"` to match this enum.
     """
 
     tool_id: str
