@@ -146,6 +146,14 @@ workers/{worker_id}/
 
 ### WorkerOutput Schema
 
+**[SUPERSEDED/STALE — architecture-owner decision.]** The inline schema below
+predates, and conflicts with, the canonical `WorkerOutput` schema in
+`03_DATA_SCHEMAS_README.md` §2.12 (`provenance`, `trust_classification`,
+`worker_id`, `payload`, `retry_count`). `02_COMPONENT_SPECS.md` §14 cites
+`03` as the schema authority for `WorkerOutput`; `03`'s shape is canonical.
+The JSON block below is retained only for historical reference and must
+not be implemented against.
+
 ```json
 {
   "worker_id": "string",

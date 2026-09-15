@@ -167,8 +167,8 @@ Label legend unchanged — **[LOCKED] [REQ] [REC] [ASSUMPTION] [OPEN — REQUIRE
   "resource_limits": {"cpu": "2", "memory_mb": 1024, "pid_limit": 128},
   "timeout_seconds": 300,
   "allowed_stages": ["tool_execution"],
-  "risk_classification": "medium-high",
-  "failure_handling": "On timeout, capture partial matches. Template/capability selection is authorized per-request through the Scope Gate (OD-17, resolved — see `13_OPEN_DECISIONS.md`), not gated on a pre-built static allowlist.",
+  "risk_classification": "high",
+  "failure_handling": "On timeout, capture partial matches. **[REQ, blocking]** this tool must not be activated in a live run until OD-17's curated `template_tags` allowlist exists — running with an unrestricted or unreviewed tag set is out of scope for what this manifest authorizes.",
   "audit_requirements": "Log target_url, exact template_tags used (this is the single most important audit field for this tool, given OD-17), and every match with its template ID."
 }
 ```
@@ -277,6 +277,6 @@ Before `07_DOCKER_SPEC/`, these concepts matter most:
 
 3. **Two schema gaps have now been found by instantiation (OD-15 in `05`, OD-19 here).** Both follow the same shape: `03` defined a schema before any real content was written against it, and both gaps were in fields the master prompt itself explicitly asked for but `03` didn't fully capture. Worth watching for a third occurrence when `08_MODEL_REGISTRY/` populates real `ModelManifest` instances — if the pattern holds, it's worth a dedicated pass reconciling `03` against `04`–`08` once all manifests exist, which is exactly what `14`'s cross-document consistency audit is for.
 
-4. **Risk classification isn't just a label — it should predict review scrutiny.** Notice Nuclei is the only entry marked `medium-high` and the only one with a **[REQ, blocking]** failure-handling note. That's intentional: it's the tool with the most potential to cause real, unintended impact on a target if misconfigured, and its registry entry should read as more cautious than Subfinder's, not identically templated.
+4. **Risk classification isn't just a label — it should predict review scrutiny.** Notice Nuclei is the only entry marked `high` and the only one with a **[REQ, blocking]** failure-handling note. That's intentional: it's the tool with the most potential to cause real, unintended impact on a target if misconfigured, and its registry entry should read as more cautious than Subfinder's, not identically templated. (**[CORRECTED — architecture-owner decision]** this entry originally instantiated `"medium-high"`, a value outside `03` §2.4's closed `low | medium | high` enum; the enum is not expanded, and the value is corrected to `high`.)
 
 5. **A provisional registry entry (Promptfoo) is a legitimate registry state, not a contradiction.** The Tool Registry mechanism (`02` §1) needs to actually check `validation_status`, not just whether a `tool_id` exists — "registered but not authorized to run" is a real, intentional state this design supports, and it's worth confirming `02`'s registry-lookup interface (`lookup(tool_id) -> ToolManifest | RegistryRejection`) is understood to also reject a lookup where `validation_status != active`, not just where the `tool_id` is entirely unknown.

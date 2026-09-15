@@ -9,15 +9,11 @@
 
 ## How This Document Is Organized
 
-- **§0 — Resolution Log** — what changed in this revision and why, at a glance.
-- **§1 — RESOLVED DECISIONS (LOCKED)** — decisions Harsh has made directly. These are now authoritative. Do not treat any superseded recommendation elsewhere in `01`–`12` as still governing where it conflicts with an entry here.
-- **§2 — Remaining Open Items** — the small number of items not addressed in this revision, or explicitly left as "needs clarification" by Harsh's own decision text.
-- **§3 — Follow-On Items Requiring Harsh's Confirmation** — narrow, downstream questions this revision's decisions raise in specific other documents (e.g., whether to also edit an acceptance gate), which were *not* explicitly decided and are not resolved here.
-- **Summary Table** and **Cross-Document Impact Table** at the end.
+25 open decisions plus 1 resolved (OD-01 through OD-27; OD-07 was reserved into OD-04's scope and never became a separate item — noted for numbering continuity, not a gap). Grouped by **blocking severity**, since that's what determines what Harsh should look at first:
 
----
-
-# §0 — Resolution Log
+- **§1 — Full MVP blockers** (12 items): Phase 2A cannot launch its first live run until these resolve. *(Updated in the final correction pass — OD-05 moved out to §3 as an over-classification correction; see its entry.)*
+- **§2 — Partial blockers** (3 items): block one specific capability, not the MVP generally.
+- **§3 — Non-blocking** (10 open items + OD-15, now [LOCKED]/resolved): can be decided on a more relaxed timeline, several with a natural trigger for revisiting rather than a hard date. OD-15 is kept in this section for numbering continuity but is no longer open — see its entry.
 
 On 2026-09-15, Harsh resolved OD-18, OD-06, OD-27, OD-17, OD-04, OD-08, and OD-11 through direct architecture discussion, explicitly rejecting the *previously proposed* designs in `07` §4 (forced egress proxy as a mandatory mechanism) and the framing of OD-27 as prompt/expected-answer benchmarking. In the same discussion, Harsh also answered nearly every other outstanding item in this document (OD-01, 02, 03, 09, 10, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 26). Each is recorded below with its own entry. Nothing in this revision was inferred or extrapolated beyond what was explicitly stated — where a decision leaves a genuine gap, it is marked **NEEDS CLARIFICATION**, not silently filled.
 
@@ -68,25 +64,69 @@ On 2026-09-15, Harsh resolved OD-18, OD-06, OD-27, OD-17, OD-04, OD-08, and OD-1
 
 ---
 
-## OD-27 — Model Benchmark / Candidate Evaluation
-**STATUS: LOCKED**
+# §3 — Non-Blocking (defer without holding up MVP launch)
 
-**Prior proposal (superseded):** `16`'s Model Benchmarking Protocol and `11` §12's Model Evaluation Harness, as currently written, describe benchmarking as running N prompts against a role's schema and counting schema-valid outputs, plus a human-reviewed sample — a prompt/expected-answer-shaped evaluation. That framing is **superseded**. `11` §12 and `16` need rewriting to reflect the decision below before either is treated as implementation-ready (see Cross-Document Impact Table — flagged, not yet rewritten in this pass).
+## OD-05 — Observability/logging stack **(reclassified from full-MVP-blocker in the final correction pass — see note)**
+**Question:** What structured logging framework and metrics backend does the project standardize on?
+**Why it matters:** Every component has an Observability requirement (`02`); none specify concrete tooling.
+**Options:** (a) Lightweight structured JSON logging + a simple metrics exporter. (b) A heavier observability platform. (c) Minimal ad-hoc logging now, formalize later.
+**Tradeoffs:** (a) balances rigor and simplicity, fits the project's "assemble, don't build infra" philosophy; (b) more capable but more setup/maintenance for a small team; (c) fastest to ship but risks inconsistent logs that the research/audit layers depend on.
+**Recommendation:** (a) — adopt a structured-JSON logging convention; it can be executed in an afternoon and refined later, and doesn't block building schemas, registries, or the pipeline itself.
+**Owner:** Harsh (or delegated to the implementer once the convention is confirmed) · **Deadline:** before first component implementation, but does not gate the start of implementation · **Blocking:** No
+**Reclassification note:** originally filed as a full MVP blocker. On re-review during the final correction pass, this was over-classified — it's a `[REC]` convention an engineer can simply adopt, not an architectural decision requiring Harsh's judgment before anything else can proceed. Reclassified to non-blocking.
+**Origin:** `02` (implicit across all Observability rows)
 
-**Authoritative decision:**
-- The benchmark is **not** a simple prompt/expected-answer dataset and is **not** based on model consensus.
-- Model roles remain contract-driven; concrete models remain replaceable implementations — this part of `01`/`08`'s architecture is unchanged.
-- For a role/task, multiple candidate models may compete under the **same controlled starting conditions** — same relevant initial knowledge/data/context, same authorized capability boundaries. Candidates then independently attempt to solve the task.
-- Evaluation considers the actual **trajectory/performance**, including (non-exhaustively): understanding of the task; quality/relevance of actions; number and quality of meaningful experiments; ability to try alternative approaches; adaptation after failure/new evidence; efficiency; evidence quality; hallucinated/fabricated observations; whether claimed actions were actually performed; whether the task was actually solved; policy/scope compliance; and other role-specific dimensions.
-- A strong Judge model may evaluate trajectories using a **fixed scoring contract** and explicit evaluation questions/criteria.
-- The Judge is **not** a source of ground truth merely because it prefers one model's result — model consensus is not ground truth. Where possible, actual task success is established by an **objective observable result** in the controlled test environment. The Judge evaluates *how well* the candidate performed relative to the task/outcome.
-- The Judge should **not** automatically receive the entire original parsed/recon dataset when irrelevant to judging a specific candidate trajectory. Instead, provide the **minimum relevant evaluation package**: candidate trajectory, actions performed, tool results produced by that candidate, evidence generated, claimed result, objective outcome, relevant resource/efficiency information. This reduces token use and reduces bias from over-exposure to the full investigation context.
-- Candidate model identity/branding should be **hidden or minimized** in comparative evaluation where practical, to reduce model-family/name bias.
-- The winning candidate is the one that performs best against the defined evaluation criteria and actual task outcome — **not** the one that wins a consensus vote.
-- Resulting validated trajectories/evaluations may later be used as training/evaluation data for improving or fine-tuning role-specific models.
-- The benchmark must remain **controlled, repeatable, and tied to objective outcomes** wherever possible. This is explicitly not "pick five models and let the biggest Judge choose."
+## OD-09 — Formalize TB-A's ScreenResult as a schema?
+**Recommendation:** Yes, for consistency with the "every rejection is logged" requirement (`09` §7) — but MVP can launch with an ad-hoc log format for this one case and formalize later.
+**Owner:** Harsh · **Deadline:** flexible, ideally alongside `14`'s audit · **Blocking:** No
+**Origin:** `02` §8
 
-**Resolves:** OD-27 (bootstrap dataset question) — the bootstrap set is a controlled collection of actual vulnerability/task cases (trajectory-evaluable), not a prompt/answer set. See also Q17/Q18/Q19 below for sample-size and threshold framing.
+## OD-12 — SkillManifest.vulnerability_class: closed enum vs. open string
+**Recommendation:** Open string, registry-validated, as already given in `03` — preserves extensibility, doesn't block the current 4 Skills either way.
+**Owner:** Harsh · **Deadline:** before Skill Registry implementation, low urgency · **Blocking:** No
+**Origin:** `03` §2.15
+
+## OD-15 — [LOCKED] Manifest provenance/authorship metadata converges on `ManifestProvenance` **(ARCHITECTURE-OWNER APPROVED — resolved during the Context-1 schema-implementation pass; no longer open)**
+**Decision:** A single lightweight `ManifestProvenance` type ({created_by, created_at, source_basis, version}) is authoritative, applied **uniformly to `ToolManifest`, `WorkerManifest`, and `SkillManifest`** — not just `SkillManifest`. This replaces `SkillManifest`'s prior use of the pipeline-run-oriented `Provenance` type, and adds a `provenance: ManifestProvenance` field to `ToolManifest` and `WorkerManifest`, which previously had none (their existing free-text `audit_requirements`/`provenance_requirements` fields describe *runtime logging* requirements, a different concept, and are unchanged).
+**Background (why this was raised):** originally scoped to `SkillManifest.provenance`'s awkward fit with the pipeline-run `Provenance` type (`Provenance` requires a `run_id`, which a manifest authored once by a human outside any pipeline run doesn't naturally have). The final correction pass's consistency check (`14` FINDING-2) found the inconsistency was broader: `ToolManifest` expressed this as free-text `audit_requirements`, `WorkerManifest` as free-text `provenance_requirements`, and `SkillManifest` alone used a full typed (and ill-fitting) `Provenance` object. All three now converge on `ManifestProvenance`.
+**Owner:** Harsh · **Resolved:** approved during the Context-1 schema-implementation pass · **Blocking:** No (was never a blocker; now moot — resolved)
+**Origin:** `05`; widened `14`; LOCKED by architecture-owner decision (Context-1 schema-decisions review)
+
+## OD-16 — No bright-line rule between IDOR and Privilege Escalation
+**Recommendation:** Accept case-by-case Judge reasoning for MVP; only add explicit tie-breaking guidance if real findings show the ambiguity is actually causing inconsistent routing in practice.
+**Owner:** Harsh · **Deadline:** revisit after ~10–20 real routed candidates across these two Skills, not before · **Blocking:** No
+**Origin:** `05` §4
+
+## OD-19 — 03's ToolManifest missing the expected_output field
+**Recommendation:** Amend `03` to formally add `expected_output: string`, matching what `06`'s instances already include in practice — a documentation-cleanliness fix, not a functional gap.
+**Owner:** Harsh · **Deadline:** during `14`'s cross-document audit · **Blocking:** No
+**Origin:** `06`
+
+## OD-20 — Cryptographic image signature verification beyond digest pinning
+**Recommendation:** (b) as proposed in `07` — mandatory digest pinning baseline, opportunistic signature verification added per tool where available, never blocking on universal availability.
+**Owner:** Harsh · **Deadline:** can be added incrementally per tool, not blocking · **Blocking:** No
+**Origin:** `07` §1
+
+## OD-21 — Third-party OSINT provider API keys for Subfinder
+**Recommendation:** No keys for MVP launch — zero secrets-management complexity now; revisit only if real runs show passive-source coverage is actually a limiting factor.
+**Owner:** Harsh · **Deadline:** revisit post-launch based on real coverage data · **Blocking:** No
+**Origin:** `07` §6
+
+## OD-22 — Should Judge and Specialist use different model families? **(re-examined and confirmed in the final correction pass, not rejected)**
+**Recommendation:** Mandate diversity as standing policy — the cost (fewer model choices per role) is low, and the risk being guarded against (undermining the entire finder/judge separation) is architecturally central to Track A's credibility. Note: neither `11`'s tests nor `12`'s gates currently check for this, so if diversity isn't mandated, the correlated-blind-spot risk would go entirely undetected.
+**Re-examination note:** during the final correction pass, this was specifically checked for over-engineering (per that review's Rule 0) rather than accepted on the strength of having been raised before. It was confirmed as a genuine risk to a *stated core principle* (the finder/judge separation, `01` §19.7), not a speculative enhancement — kept as-is.
+**Owner:** Harsh · **Deadline:** before benchmarking begins, so it shapes which candidates are even considered together · **Blocking:** No — MVP can launch with same-family candidates and this applied retroactively at primary-selection time, but earlier is better
+**Origin:** `08` §5
+
+## OD-25 — No mechanism for retroactive false-negative annotation
+**Recommendation:** Represent via a specially-typed `ResearchEvent` (extending `event_category`) rather than a new dedicated schema — reuses existing infrastructure, avoids over-designing before a real case shows the pattern's actual shape.
+**Owner:** Harsh · **Deadline:** unpredictable (before the first real false-negative case, which can't be scheduled) · **Blocking:** No — blocks only the specific deferred test `RDI-006`, not general MVP launch
+**Origin:** `10` §6
+
+## OD-26 — Dataset pruning policy for later-discovered contamination
+**Recommendation:** Annotate-and-exclude-going-forward for MVP simplicity — at current small data volume, the added judgment overhead of a severity-based hybrid approach isn't yet justified. Revisit if the dataset corpus grows large enough that contamination becomes a recurring, not rare, event.
+**Owner:** Harsh · **Deadline:** unpredictable (before the first real contamination case) · **Blocking:** No
+**Origin:** `10` §11
 
 ---
 
@@ -99,17 +139,36 @@ On 2026-09-15, Harsh resolved OD-18, OD-06, OD-27, OD-17, OD-04, OD-08, and OD-1
 
 **Prior proposal (superseded):** the framing in `13` (prior revision) and `06` §5 that OD-17 requires a Harsh-curated static allowlist of Nuclei template tags before any activation, implying a fixed, small, hardcoded template list. That framing is corrected — it should not be read as license to cripple model agency down to a tiny predetermined action sequence.
 
-**Authoritative decision:**
-- The model may reason about what additional information or operation it needs.
-- The model may request an appropriate tool/capability dynamically.
-- The request must pass through the Scope Gate / deterministic policy before execution.
-- The model cannot grant itself new authorization or expand scope.
-- The tool then executes the authorized operation and returns evidence.
-- Boundary: **MODEL DECIDES WHAT IT NEEDS → POLICY/SCOPE DECIDES WHETHER IT IS AUTHORIZED → TOOL EXECUTES.**
-- Nuclei operates within this same authorized capability/policy boundary as every other tool, while preserving meaningful model decision-making.
-- Do not invent a giant static template list unless a later implementation/security decision explicitly requires one. Where a specific Nuclei capability/template restriction is actually required, it is defined based on the actual capability being implemented and verified during the relevant implementation phase — not pre-decided here.
+| ID | Short title | Group | Owner | Blocking |
+|---|---|---|---|---|
+| OD-01 | Promptfoo status | §2 | Harsh | Promptfoo only |
+| OD-02 | Retry/timeout/resource values | §1 | Harsh | Full MVP |
+| OD-03 | Host hardware profile | §1 | Harsh | Full MVP |
+| OD-04 | Dedup index vs. Mem0 boundary | §1 | Harsh | Full MVP |
+| OD-05 | Observability/logging stack | §3 | Harsh | No *(reclassified — see entry)* |
+| OD-06 | Human Verification interface | §1 | Harsh | Full MVP |
+| OD-08 | Registry manifest storage | §1 | Harsh | Full MVP |
+| OD-09 | ScreenResult schema | §3 | Harsh | No |
+| OD-10 | Dedup outage: fail closed/open | §1 | Harsh | Full MVP |
+| OD-11 | Research Store storage tech | §1 | Harsh | Full MVP |
+| OD-12 | vulnerability_class enum shape | §3 | Harsh | No |
+| OD-13 | Output truncation cap | §1 | Harsh | Full MVP |
+| OD-14 | AI-security Skill gap | §2 | Harsh | AI-app targets only |
+| OD-15 | ManifestProvenance, uniform across manifests | §3 | Harsh | **[LOCKED] Resolved — not blocking, not open** |
+| OD-16 | IDOR/PrivEsc boundary | §3 | Harsh | No |
+| OD-17 | Nuclei template allowlist | §2 | Harsh | Nuclei only |
+| OD-18 | Network egress scoping mechanism | §1 | Harsh | Full MVP (highest leverage) |
+| OD-19 | ToolManifest.expected_output gap | §3 | Harsh | No |
+| OD-20 | Image signature verification | §3 | Harsh | No |
+| OD-21 | OSINT provider API keys | §3 | Harsh | No |
+| OD-22 | Judge/Specialist model diversity | §3 | Harsh | No |
+| OD-23 | authorization_reference validation depth | §1 | Harsh | Full MVP |
+| OD-24 | Log/research-store retention & encryption | §1 | Harsh | Full MVP |
+| OD-25 | Retroactive false-negative mechanism | §3 | Harsh | No (blocks one test) |
+| OD-26 | Dataset contamination pruning policy | §3 | Harsh | No |
+| OD-27 | Benchmarking bootstrap dataset | §1 | Harsh | Full MVP |
 
-**Effect on `06`'s Nuclei entry:** its `[REQ, blocking]` note ("must not be activated until OD-17's curated `template_tags` allowlist exists") is **superseded** by this decision — Nuclei is now governed by the same capability-request-through-Scope-Gate model as every other tool, not held to a separate pre-built allowlist requirement. See Cross-Document Impact Table.
+**12 full blockers, 3 partial blockers, 10 non-blocking, 1 resolved/[LOCKED] (OD-15)** (updated in the final correction pass: OD-05 was reclassified from full-blocker to non-blocking as an over-classification correction — see its entry in §3; OD-15 was subsequently resolved and marked LOCKED during the Context-1 schema-implementation pass). OD-07 was reserved into OD-04 and never became a standalone item.
 
 ---
 
@@ -161,8 +220,7 @@ This resolves **OD-10** as moot for MVP: since no live dedup index exists, no de
 ### OD-12 — SkillManifest.vulnerability_class enum shape
 **STATUS: LOCKED.** Open, registry-validated string, not a closed enum — confirms `03` §2.15's existing recommendation. Allows new vulnerability classes without a schema change per class.
 
-### OD-13 — RawToolOutput truncation cap
-**STATUS: LOCKED (as a deferred approach; no cap imposed for MVP).** Do not impose the proposed fixed 10 MB cap. Tool output is initially handled without an arbitrary hard size ceiling; real tool-output volume, memory behavior, context pressure, and execution characteristics are observed first. Any future output-size limit is introduced from measured behavior, not an arbitrary starting value.
+1. **Every recommendation in this document is a recommendation, not a decision — with exactly one exception.** OD-15 has since been reviewed by the architecture owner and is marked `[LOCKED]`; every other item remains open. `14`'s audit (and any later reader) should treat every item other than OD-15 as still open when checking for consistency, not assume any of these recommendations have been silently accepted just because they're written down with reasoning.
 
 ### OD-14 — AI-security Skill gap
 **STATUS: LOCKED.** Garak/PyRIT remain registered but **inactive and unroutable** for now — not activated until a corresponding AI-security Skill/capability exists **and** there is an applicable target scope for them.
