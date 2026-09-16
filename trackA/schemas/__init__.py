@@ -82,6 +82,13 @@ existing type, and in particular why `EvaluationJudgePackage` is a
 *separate* type from the `JudgeEvaluationPackage = JudgeInput` alias above
 (they serve two structurally different Judge invocations: live-pipeline
 routing vs. benchmark-trajectory scoring).
+
+Context 5 addendum: `AuthorizedAction` and `OrchestratorRejection`
+(trackA.schemas.execution) are new schemas closing a genuine gap —
+docs/02_COMPONENT_SPECS.md §11 names both as the Orchestrator's own
+`propose_and_authorize(...) -> AuthorizedAction | OrchestratorRejection`
+return type, but docs/03 never formalised either as a schema. See that
+module's docstring for the full report.
 """
 from __future__ import annotations
 
@@ -100,6 +107,7 @@ from trackA.schemas.evaluation import (
     EvaluationTrajectory,
     TrajectoryStep,
 )
+from trackA.schemas.execution import AuthorizedAction, OrchestratorRejection
 from trackA.schemas.extraction import ExtractedEntity, ExtractorInput, ExtractorJSON
 from trackA.schemas.gates import CheckResult, DeduplicationResult, EvidenceGateResult
 from trackA.schemas.human import HumanReviewPackage, Report, ValidationOutcome
@@ -154,6 +162,8 @@ __all__ = [
     "Run",
     # orchestrator
     "OrchestratorAction",
+    "AuthorizedAction",
+    "OrchestratorRejection",
     # tools
     "ToolManifest",
     "ToolExecutionRequest",
