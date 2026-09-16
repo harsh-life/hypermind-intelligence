@@ -117,6 +117,24 @@ def test_backend_is_an_open_string_not_a_closed_enum():
     assert binding.backend == "a-future-backend-nobody-has-named-yet"
 
 
+def test_get_binding_returns_the_bound_binding():
+    """[Context 4 addition] get_binding() is invoke()'s own lookup,
+    exposed publicly so a caller (trackA.evaluation.harness) can inspect
+    which backend/connection a candidate is bound to without duplicating
+    RuntimeRegistry's internal binding table."""
+    runtime = RuntimeRegistry()
+    runtime.register_adapter(MockAdapter())
+    binding = ModelBinding(candidate_id="c1", backend="mock", connection={"x": 1})
+    runtime.bind(binding)
+    assert runtime.get_binding("c1") == binding
+
+
+def test_get_binding_unknown_candidate_raises():
+    runtime = RuntimeRegistry()
+    with pytest.raises(UnknownIdError):
+        runtime.get_binding("never-bound")
+
+
 def test_model_binding_serialization_round_trip():
     binding = ModelBinding(candidate_id="c1", backend="litellm", connection={"model": "gemini/gemini-1.5-flash"})
     dumped = binding.model_dump(mode="json")

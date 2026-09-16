@@ -1,0 +1,13 @@
+{
+  "provenance": {
+    "record_id": "dataset-record-ds-track-a-bootstrap-v1",
+    "run_id": "dataset-authoring",
+    "created_at": "2026-09-15T00:00:00Z",
+    "stage": "judge",
+    "source_component": "Context-4 Evaluation Harness Bootstrap"
+  },
+  "dataset_id": "ds-track-a-bootstrap",
+  "version": "v1",
+  "source_record_ids": ["idor-lab-001", "injection-probe-001", "endpoint-mapper-lab-001"],
+  "purity_notes": "All three cases are synthetic/lab-derived, authored directly for the Context-4 evaluation harness bootstrap. None are field-validated real findings and none were sourced from any live Track A run — per docs/13_OPEN_DECISIONS.md OD-27: 'Cases are explicitly labeled as synthetic/lab-derived — never field-validated — in DatasetRecord.purity_notes, so they can never later be confused with real field data once that exists.'"
+}

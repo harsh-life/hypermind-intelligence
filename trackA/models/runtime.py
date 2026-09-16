@@ -169,11 +169,24 @@ class RuntimeRegistry:
             )
         self._bindings[binding.candidate_id] = binding
 
-    def invoke(self, candidate_id: str, request: InferenceRequest) -> InferenceResult:
+    def get_binding(self, candidate_id: str) -> ModelBinding:
+        """The ModelBinding bound to `candidate_id`.
+
+        [Context 4 addition] Extracted from `invoke()`'s own lookup so a
+        caller that needs to know *how* a candidate would be reached
+        (e.g. to record `backend`/`connection` as reproducibility
+        provenance, trackA.evaluation.harness) doesn't have to duplicate
+        this registry's internal binding table. Purely additive: `invoke`
+        below is refactored to call this rather than repeating the
+        lookup, with no change to its own behavior or signature.
+        """
         try:
-            binding = self._bindings[candidate_id]
+            return self._bindings[candidate_id]
         except KeyError:
             raise UnknownIdError(f"no runtime binding for candidate_id: {candidate_id!r}") from None
+
+    def invoke(self, candidate_id: str, request: InferenceRequest) -> InferenceResult:
+        binding = self.get_binding(candidate_id)
         adapter = self.get_adapter(binding.backend)
         return adapter.infer(request, binding=binding)
 

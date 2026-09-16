@@ -1,0 +1,20 @@
+{
+  "case_id": "idor-lab-001",
+  "role": "specialist",
+  "task_description": "Given two account tokens and an object-reference endpoint, determine whether account B can read account A's order by substituting the object reference while holding account B's session constant. Report whether the endpoint is vulnerable.",
+  "starting_inputs": {
+    "endpoint": "/api/v1/orders/1042",
+    "account_a_order_id": 1042,
+    "account_b_token": "tok-account-b",
+    "reference_pattern": "sequential_numeric"
+  },
+  "available_capabilities": ["read_endpoint_map", "read_reference_analysis"],
+  "objective_outcome": {"vulnerable": true},
+  "injection_probe": false,
+  "notes": "Synthetic controlled-lab case, based on the canonical IDOR worked example in docs/01_ARCHITECTURE.md §8 / docs/05_SKILL_MANIFESTS_README.md §1. No real target is touched by this case.",
+  "provenance": {
+    "created_by": "context-4",
+    "source_basis": "Synthetic lab case authored for the Context-4 evaluation harness bootstrap dataset (docs/13_OPEN_DECISIONS.md OD-27).",
+    "version": "1.0.0"
+  }
+}
