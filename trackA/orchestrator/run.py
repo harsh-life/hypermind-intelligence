@@ -50,7 +50,7 @@ from trackA.orchestrator.outcomes import (
 )
 from trackA.orchestrator.run_artifact import RunArtifact
 from trackA.policy.scope_gate import ScopeGate, ScopeGateDecision
-from trackA.registries.errors import RegistryError
+from trackA.registries.errors import NoApprovedCandidateError, RegistryError
 from trackA.registries.models import ModelRegistry
 from trackA.registries.resolution import RoleResolver
 from trackA.registries.skills import SPECIALIST_EXECUTOR, SkillRegistry
@@ -427,7 +427,27 @@ class RunContext:
             return outcome
 
         worker_manifest = self._orch.worker_registry.lookup(action.target_registry_id)
-        candidate = self._orch.role_resolver.resolve_for_worker(worker_manifest)
+        # Role resolution can legitimately fail with NoApprovedCandidateError:
+        # a role may have candidates registered but none yet approved (docs/08 +
+        # docs/13 OD-27 — a model earns `approved` only through benchmarking, so
+        # "no approved candidate for this role yet" is an expected, architecturally-
+        # correct state, e.g. every non-Extractor role in the shipped seed data).
+        # That must surface as a clean failure event, never as an unhandled
+        # exception out of the Orchestrator — mirrors how a technical model-call
+        # failure below is handled, and preserves the fail-safe invariant (no
+        # approved model => no output produced).
+        try:
+            candidate = self._orch.role_resolver.resolve_for_worker(worker_manifest)
+        except NoApprovedCandidateError as exc:
+            failure = self._record_failure(
+                stage=PipelineStage.WORKER,
+                failure_type="unreachable_dependency",
+                detail=str(exc),
+                retry_count=0,
+            )
+            outcome = WorkerActionOutcome(action=action, authorized=authorization, failure=failure)
+            self.worker_actions.append(outcome)
+            return outcome
 
         # Constructed for provenance/audit completeness (docs/03 §2.11:
         # "Produced by: Worker Execution Framework") even though only its
@@ -533,7 +553,22 @@ class RunContext:
             # schema default.
             contains_skill_content=False,
         )
-        candidate = self._orch.role_resolver.resolve(_JUDGE_ROLE)
+        # See run_worker_action: an unapproved/absent Judge candidate (the
+        # shipped seed data's judge role is `candidate`, not `approved`, and
+        # Judge identity is explicitly UNDECIDED in docs/08) is a clean failure,
+        # not a crash.
+        try:
+            candidate = self._orch.role_resolver.resolve(_JUDGE_ROLE)
+        except NoApprovedCandidateError as exc:
+            failure = self._record_failure(
+                stage=PipelineStage.JUDGE,
+                failure_type="unreachable_dependency",
+                detail=str(exc),
+                retry_count=0,
+            )
+            outcome = JudgeActionOutcome(judge_input=judge_input, failure=failure)
+            self.judge_actions.append(outcome)
+            return outcome
         request = InferenceRequest(
             role=_JUDGE_ROLE,
             prompt=json.dumps(
@@ -626,7 +661,22 @@ class RunContext:
             return outcome
 
         skill_manifest = self._orch.skill_registry.lookup(action.target_registry_id, caller=SPECIALIST_EXECUTOR)
-        candidate = self._orch.role_resolver.resolve_for_skill(skill_manifest)
+        # See run_worker_action: an unapproved/absent Specialist candidate (both
+        # shipped specialist seed candidates are `candidate`, not `approved`) is a
+        # clean failure, not a crash — and, crucially, no CANDIDATE_FINDING is ever
+        # produced when there is no approved model to produce it.
+        try:
+            candidate = self._orch.role_resolver.resolve_for_skill(skill_manifest)
+        except NoApprovedCandidateError as exc:
+            failure = self._record_failure(
+                stage=PipelineStage.SPECIALIST,
+                failure_type="unreachable_dependency",
+                detail=str(exc),
+                retry_count=0,
+            )
+            outcome = SpecialistActionOutcome(action=action, authorized=authorization, failure=failure)
+            self.specialist_actions.append(outcome)
+            return outcome
 
         SpecialistInput(
             provenance=Provenance(run_id=self.run.run_id, stage=PipelineStage.SPECIALIST, source_component="Specialist Executor"),
