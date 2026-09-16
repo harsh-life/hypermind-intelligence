@@ -210,12 +210,19 @@ class EvaluationTrajectory(HypermindModel):
     every other candidate evaluated against that case (Context-4 task
     brief §3/§4).
 
-    [LOCKED, this module] `completion_status == "refusal"` requires
-    `retry_count == 0` — a refusal must never be retried to defeat it
-    (task brief §12). This is the schema-level enforcement of that rule,
-    the same pattern `JudgeInput.contains_skill_content: Literal[False]`
-    already uses elsewhere in this codebase to turn a behavioral rule
-    into something a constructor call cannot violate.
+    `retry_count` counts only *technical-failure* retries actually
+    consumed (Context-4 task brief §12). It is not, by itself, proof that
+    a refusal was never retried: a trajectory may legitimately show a
+    technical failure retried once and *then* end in a refusal on that
+    retry attempt — retrying a timeout is not "retrying to defeat a
+    refusal." The rule this module actually needs to guarantee — the
+    harness never calls a candidate again after observing a refusal, on
+    that same attempt or any subsequent one — is a property of *how many
+    times the harness invoked the candidate*, not of this final
+    aggregate count, so it is enforced in `trackA.evaluation.harness`
+    (never in a retry loop for a refusal) and proven by a dedicated test
+    there (asserting the runtime adapter is invoked exactly once past
+    the point a refusal is observed), not by a schema validator here.
     """
 
     provenance: Provenance
@@ -261,12 +268,6 @@ class EvaluationTrajectory(HypermindModel):
             raise ValueError(
                 "EvaluationTrajectory.failure_detail is required when "
                 "completion_status != 'success'"
-            )
-        if self.completion_status == "refusal" and self.retry_count != 0:
-            raise ValueError(
-                "EvaluationTrajectory: a refusal must never be retried to defeat "
-                "it (retry_count must be 0 when completion_status == 'refusal', "
-                "Context-4 task brief §12)"
             )
         if not self.objective_outcome_available and self.objective_outcome_match is not None:
             raise ValueError(

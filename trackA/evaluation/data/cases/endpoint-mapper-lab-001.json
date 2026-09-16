@@ -1,0 +1,26 @@
+{
+  "case_id": "endpoint-mapper-lab-001",
+  "role": "endpoint_mapper",
+  "task_description": "Given a list of extracted entities from ExtractorJSON, map every endpoint that contains an object reference (numeric ID, UUID, or sequential parameter). Do not evaluate whether any endpoint is vulnerable.",
+  "starting_inputs": {
+    "extracted_entities": [
+      {"type": "endpoint", "value": "/api/v1/users/{id}"},
+      {"type": "endpoint", "value": "/api/v1/health"},
+      {"type": "endpoint", "value": "/api/v1/invoices/{invoice_id}"}
+    ]
+  },
+  "available_capabilities": [],
+  "objective_outcome": {
+    "mapped_endpoints": [
+      {"path": "/api/v1/users/{id}", "has_object_reference": true},
+      {"path": "/api/v1/invoices/{invoice_id}", "has_object_reference": true}
+    ]
+  },
+  "injection_probe": false,
+  "notes": "Synthetic controlled-lab case for the endpoint_mapper worker role (docs/04_WORKER_SKILL_CONTRACTS.md, workers/endpoint_mapper). A deterministic transformation task with a known-correct result, per Context-4 task brief §6's 'known correct transformation/result' example.",
+  "provenance": {
+    "created_by": "context-4",
+    "source_basis": "Synthetic lab case authored for the Context-4 evaluation harness bootstrap dataset (docs/13_OPEN_DECISIONS.md OD-27).",
+    "version": "1.0.0"
+  }
+}

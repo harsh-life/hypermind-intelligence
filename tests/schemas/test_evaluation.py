@@ -123,18 +123,6 @@ def test_evaluation_trajectory_failure_detail_present_is_valid(run_id):
     assert t.retry_count == 2
 
 
-def test_evaluation_trajectory_refusal_must_have_zero_retries(run_id):
-    """Context-4 task brief §12: a refusal must never be retried to defeat it."""
-    with pytest.raises(ValidationError):
-        trajectory(
-            run_id,
-            completion_status="refusal",
-            failure_detail="model declined the request",
-            retry_count=1,
-            objective_outcome_match=None,
-        )
-
-
 def test_evaluation_trajectory_refusal_with_zero_retries_is_valid(run_id):
     t = trajectory(
         run_id,
@@ -144,6 +132,23 @@ def test_evaluation_trajectory_refusal_with_zero_retries_is_valid(run_id):
         objective_outcome_match=None,
     )
     assert t.completion_status == "refusal"
+
+
+def test_evaluation_trajectory_refusal_after_technical_retry_is_valid(run_id):
+    """retry_count counts only technical-failure retries actually
+    consumed; a technical failure that is retried and then genuinely
+    refused on the retry is not "retrying to defeat a refusal" — that
+    behavioral guarantee is enforced in the harness (never calling again
+    once a refusal is observed), not by this schema. See
+    trackA/schemas/evaluation.py's EvaluationTrajectory docstring."""
+    t = trajectory(
+        run_id,
+        completion_status="refusal",
+        failure_detail="model declined the request on retry",
+        retry_count=1,
+        objective_outcome_match=None,
+    )
+    assert t.retry_count == 1
 
 
 def test_evaluation_trajectory_rejects_outcome_match_when_unavailable(run_id):
