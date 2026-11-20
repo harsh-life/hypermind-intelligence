@@ -1,0 +1,15 @@
+# Hypermind Track A: development & test dependencies
+#
+# Install with:  python -m pip install -r requirements-dev.txt
+# (pulls in the runtime set from requirements.txt as well)
+
+-r requirements.txt
+
+# Test runner. Configured in pyproject.toml ([tool.pytest.ini_options],
+# testpaths = ["tests"]). The suite uses only core pytest features
+# (fixtures, parametrize, tmp_path, raises) and no plugins.
+pytest==9.2.0
+
+# Not included on purpose: the repository configures no linter, formatter,
+# type checker or coverage tool, and no test needs network, Docker, Ollama or
+# promptfoo. Add tools here only when the repository actually adopts them.

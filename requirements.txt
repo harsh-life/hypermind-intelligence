@@ -1,3 +1,22 @@
-pydantic>=2,<3
-pytest>=7
-pyyaml>=6,<7
+# Hypermind Track A: runtime dependencies
+#
+# Derived from the actual third-party imports in trackA/ (checked 2026-11-20).
+# Everything else trackA/ imports is the Python standard library.
+#
+# Verified: `pip install -r requirements-dev.txt` + full test suite (469 passed)
+# on CPython 3.12.13, 3.13.13 and 3.14.5 (macOS arm64). Prebuilt wheels for
+# every package below (and their transitive deps) exist for
+# manylinux aarch64 on cp313 and cp314, so Kali ARM64 needs no compiler.
+
+# Used by every schema (trackA/schemas/*): BaseModel, ConfigDict, Field,
+# model_validator, ValidationError. Code targets the Pydantic v2 API (v1 will
+# not work). Only this exact pin has been verified; older 2.x releases are
+# untested and may lack wheels for Python 3.14.
+# (pydantic pins its own pydantic-core version, so it is not listed here.)
+pydantic==2.14.4
+
+# Optional at import time: trackA/registries/_io.py imports yaml lazily, only
+# when a *.yaml / *.yml manifest is loaded (docs/13 OD-08: registry manifests
+# are "JSON/YAML files"). All shipped manifests are JSON. Kept as a runtime
+# dependency because YAML manifests are a supported, tested feature.
+PyYAML==6.0.3
